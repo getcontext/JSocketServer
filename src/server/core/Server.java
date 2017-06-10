@@ -4,6 +4,7 @@ package server.core;
 import server.config.ServerConfig;
 import server.utils.FileUtils;
 
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -27,7 +28,7 @@ public class Server extends Thread {
 
     public Server() {
         try {
-            config = new ServerConfig("config" + FileUtils.FileSeparator + "server.xml");
+            config = new ServerConfig("config" + FileUtils.FILE_SEPARATOR + "server.xml");
             serverSocket = new ServerSocket(Integer.parseInt(config.get("port")));
         } catch (IOException e) {
             System.err.println("failed listening on port: " + config.get("port"));
@@ -52,7 +53,7 @@ public class Server extends Thread {
 
         System.out.println("Andrew Socket Server v. 1.0");
 
-        conn = new Connection(serverSocket);
+        conn = new WebSocketConnection(serverSocket);
 
         while (true) {
             try {

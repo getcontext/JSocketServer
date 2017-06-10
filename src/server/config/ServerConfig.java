@@ -40,7 +40,7 @@ public class ServerConfig {
                 //throw e;
             }
 
-            file = rootDir + FileUtils.FileSeparator + file;
+            file = rootDir + FileUtils.FILE_SEPARATOR + file;
 
             DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
