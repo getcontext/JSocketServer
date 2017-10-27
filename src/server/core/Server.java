@@ -2,6 +2,7 @@ package server.core;
 
 
 import server.config.ServerConfig;
+import server.module.WebSocketModule;
 import server.utils.FileUtils;
 
 
@@ -24,7 +25,7 @@ public class Server extends Thread {
     private static ServerConfig config;
 
     private Socket client;
-    private Connection conn;
+    private WebSocketConnection conn;
 
     public Server() {
         try {
@@ -53,7 +54,7 @@ public class Server extends Thread {
 
         System.out.println("Andrew Socket Server v. 1.0");
 
-        conn = new WebSocketConnection(serverSocket);
+        conn = new WebSocketModule(serverSocket);
 
         while (true) {
             try {
