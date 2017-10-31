@@ -25,7 +25,7 @@ public class Server extends Thread {
     private static ServerConfig config;
 
     private Socket client;
-    private WebSocketConnection conn;
+    private WebSocketConnection connection;
 
     public Server() {
         try {
@@ -35,6 +35,8 @@ public class Server extends Thread {
             System.err.println("failed listening on port: " + config.get("port"));
             System.exit(1);
         }
+
+        connection = new WebSocketModule(serverSocket);
 
         this.start();
     }
@@ -53,9 +55,6 @@ public class Server extends Thread {
     public void run() {
 
         System.out.println("Andrew Socket Server v. 1.0");
-
-        conn = new WebSocketModule(serverSocket);
-
         while (true) {
             try {
                 sleep(1);

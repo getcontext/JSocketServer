@@ -38,6 +38,24 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
     }
 
     @Override
+    public void handleStream(Socket client) {
+        try {
+            this.client = client;
+            out = new ObjectOutputStream(client.getOutputStream());
+            in = new ObjectInputStream(client.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try { //try to close gracefully
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+   @Deprecated
+    @Override
     public void handleStream() {
         try {
             client = serverSocket.accept();
@@ -56,7 +74,13 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
 
     public void run() {
         while (true) {
-            handleStream();
+
+            try {
+                handleStream(serverSocket.accept());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
             String data = getRequestAsString();
 
             if (isGet(data)) {
