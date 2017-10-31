@@ -26,6 +26,7 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
     byte[] responseByte;
     byte[] frame = new byte[10];
     String response;
+    String request;
     Socket client;
     ServerSocket serverSocket;
     private boolean close = false;
@@ -81,10 +82,10 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
                 e.printStackTrace();
             }
 
-            String data = getRequestAsString();
+            request = getRequestAsString();
 
-            if (isGet(data)) {
-                if (isHandshake(data)) {
+            if (isGet()) {
+                if (isHandshake()) {
                     try {
                         sendHandshake();
                     } catch (NoSuchAlgorithmException | IOException e) {
@@ -92,8 +93,8 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
                     }
                 } else {
                     try {
-                        String msg = receive();
-                        System.out.println(msg);
+                        response = receive();
+//                        System.out.println(response);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -102,7 +103,7 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
 
             if (close) {
                 try {
-                    out.writeObject(response);
+//                    out.writeObject(response);
                     out.flush();
                     out.close();
                     in.close();
@@ -122,8 +123,7 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
 
     @Override
     public void sendHandshake() throws NoSuchAlgorithmException, IOException {
-        byte[] response;
-        response = ("HTTP/1.1 101 Switching Protocols\r\n"
+        responseByte = ("HTTP/1.1 101 Switching Protocols\r\n"
                 + "WebSocketConnection: Upgrade\r\n"
                 + "Upgrade: websocket\r\n"
                 + "Sec-WebSocket-Accept: "
@@ -135,19 +135,19 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
                                         .getBytes("UTF-8")))
                 + "\r\n\r\n")
                 .getBytes("UTF-8");
-        out.write(response, 0, response.length);
+        out.write(responseByte, 0, responseByte.length);
     }
 
     @Override
-    public boolean isHandshake(String data) {
-        Matcher match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(data);
+    public boolean isHandshake() {
+        Matcher match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(request);
         secWebSocketKey = match.group(1);
         return match.find();
     }
 
     @Override
-    public boolean isGet(String data) {
-        Matcher get = Pattern.compile("^GET").matcher(data);
+    public boolean isGet() {
+        Matcher get = Pattern.compile("^GET").matcher(request);
         return get.find();
     }
 

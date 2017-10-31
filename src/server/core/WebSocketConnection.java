@@ -11,7 +11,11 @@ public interface WebSocketConnection extends SocketConnection {
 
     void sendHandshake() throws NoSuchAlgorithmException, IOException;
 
+    boolean isHandshake();
+
     boolean isHandshake(String data);
+
+    boolean isGet();
 
     boolean isGet(String data);
 
