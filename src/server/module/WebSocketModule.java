@@ -146,9 +146,19 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
     }
 
     @Override
+    public boolean isHandshake(String data) {
+        return false;
+    }
+
+    @Override
     public boolean isGet() {
         Matcher get = Pattern.compile("^GET").matcher(request);
         return get.find();
+    }
+
+    @Override
+    public boolean isGet(String data) {
+        return false;
     }
 
     @Override
