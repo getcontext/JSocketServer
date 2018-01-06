@@ -20,15 +20,15 @@ import java.util.regex.Pattern;
  */
 public class WebSocketModule extends Thread implements WebSocketConnection {
 
-    ObjectOutputStream out;
-    ObjectInputStream in;
-    byte[] requestByte;
-    byte[] responseByte;
-    byte[] frame = new byte[10];
-    String response;
-    String request;
-    Socket client;
-    ServerSocket serverSocket;
+    private ObjectOutputStream out;
+    private ObjectInputStream in;
+    private byte[] requestByte;
+    private byte[] responseByte;
+    private byte[] frame = new byte[10];
+    private String response;
+    private String request;
+    private Socket client;
+    private ServerSocket serverSocket;
     private boolean close = false;
     private String secWebSocketKey;
 
@@ -121,6 +121,11 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
         }
     }
 
+    /**
+     * @todo refactor it to separate Handshake class
+     * @throws NoSuchAlgorithmException
+     * @throws IOException
+     */
     @Override
     public void sendHandshake() throws NoSuchAlgorithmException, IOException {
         responseByte = ("HTTP/1.1 101 Switching Protocols\r\n"
