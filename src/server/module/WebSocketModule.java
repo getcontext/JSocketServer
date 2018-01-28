@@ -1,12 +1,8 @@
 package server.module;
 
-import server.core.WebSocketConnection;
-
-import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
@@ -14,6 +10,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.bind.DatatypeConverter;
+
+import server.core.WebSocketConnection;
 
 /**
  * @author andrzej.salamon@gmail.com
