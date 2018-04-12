@@ -37,7 +37,7 @@ public class Server extends Thread {
 			System.err.println("failed listening on port: " + config.get("port"));
 			System.exit(1);
 		}
-
+//@todo thread pooling
 		connection = new WebSocketModule(serverSocket);
 		connections.put(connection.getId(), connection);
 
@@ -61,6 +61,7 @@ public class Server extends Thread {
 		System.out.println("Andrew Socket Server v. 1.0");
 		while (true) {
 			try {
+				//@todo thread pooling
 				sleep(1);
 			} catch (InterruptedException e) {
 				System.err.println("sleep failed");
