@@ -12,17 +12,19 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 /**
+ *
  * @author andrzej.salamon@gmail.com
+ *
  */
-public class Server extends Thread { //lets keep it extend
-    private ServerSocket serverSocket = null;
-    public static final String IP = getIp();
+public class Server extends Thread {
+	private ServerSocket serverSocket = null;
+	public static final String IP = getIp();
 
-    private static ServerConfig config;
+	private static ServerConfig config;
 
-    private Socket client;
-    //	private SocketConnection connection;
-    private List<SocketConnection> connections = new ArrayList<SocketConnection>();
+	private Socket client;
+	private SocketConnection connection;
+	private Map<String, SocketConnection> connections = new HashMap<String, SocketConnection>();
 
     public Server() {
         try {
@@ -69,7 +71,7 @@ public class Server extends Thread { //lets keep it extend
 
         System.out.println("Andrew Socket Server v. 1.0");
         while (true) {
-            try {
+            try {//@todo thread pooling
                 sleep(1);
             } catch (InterruptedException e) {
                 System.err.println("sleep failed");
