@@ -18,24 +18,56 @@ import server.core.WebSocketConnection;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public class WebSocketModule extends Thread implements WebSocketConnection {
+public final class WebSocketModule implements Runnable, WebSocketConnection {
+    public final static String MODULE_NAME = "websocket";
 
     private ObjectOutputStream out;
     private ObjectInputStream in;
+
     private byte[] requestByte;
     private byte[] responseByte;
     private byte[] frame = new byte[10];
+
     private String response;
     private String request;
+    private String secWebSocketKey;
+
+    private boolean close = false;
+    private static int counter = 0;
+    private boolean stop = false;
+
     private Socket client;
     private ServerSocket serverSocket;
-    private boolean close = false;
-    private String secWebSocketKey;
+    private final Thread thread;
 
 
     public WebSocketModule(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
-        this.start();
+        this.thread = new Thread(this, MODULE_NAME + "_" + counter);
+//        this.start();
+    }
+
+    public static int getCounter() {
+        return counter;
+    }
+
+    public static void setCounter(int counter) {
+        WebSocketModule.counter = counter;
+    }
+
+    public static void incrementCounter(int counter) {
+        WebSocketModule.counter = counter;
+    }
+
+    @Override
+    public void start() {
+        thread.start();
+    }
+
+    @Override
+    public void stop() {
+        thread.stop();
+        stop = true;
     }
 
     @Override
@@ -55,7 +87,12 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
         }
     }
 
-   @Deprecated
+    @Override
+    public String getId() {
+        return null;
+    }
+
+    @Deprecated
     @Override
     public void handleStream() {
         try {
@@ -74,7 +111,7 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
     }
 
     public void run() {
-        while (true) {
+        while (!stop) {
 
             try {
                 handleStream(serverSocket.accept());
@@ -103,7 +140,7 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
 
             if (close) {
                 try {
-//                    out.writeObject(response);
+                    out.writeObject(response); //@todo return resp headers is closed
                     out.flush();
                     out.close();
                     in.close();
@@ -114,7 +151,7 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
                 }
             }
             try {
-                sleep(1);
+                getThread().sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -122,9 +159,9 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
     }
 
     /**
-     * @todo refactor it to separate Handshake class
      * @throws NoSuchAlgorithmException
      * @throws IOException
+     * @todo refactor it to separate Handshake class
      */
     @Override
     public void sendHandshake() throws NoSuchAlgorithmException, IOException {
@@ -257,5 +294,17 @@ public class WebSocketModule extends Thread implements WebSocketConnection {
         out.write(responseByte);
         out.flush();
 
+    }
+
+    public Thread getThread() {
+        return thread;
+    }
+
+    public Socket getClient() {
+        return client;
+    }
+
+    private void setClient(Socket client) {
+        this.client = client;
     }
 }

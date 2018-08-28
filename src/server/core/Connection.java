@@ -3,7 +3,11 @@ package server.core;
 import java.io.IOException;
 
 public interface Connection {
-    String receive() throws IOException;
+    abstract void start();
 
-    void brodcast(String data) throws IOException;
+    abstract void stop();
+
+    abstract String receive() throws IOException;
+
+    abstract void brodcast(String data) throws IOException;
 }
