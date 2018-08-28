@@ -16,15 +16,15 @@ import java.util.*;
  * @author andrzej.salamon@gmail.com
  *
  */
-public class Server extends Thread {
-	private ServerSocket serverSocket = null;
-	public static final String IP = getIp();
+public class Server extends Thread { //lets keep it extend
+    private ServerSocket serverSocket = null;
+    public static final String IP = getIp();
 
-	private static ServerConfig config;
+    private static ServerConfig config;
 
-	private Socket client;
-	private SocketConnection connection;
-	private Map<String, SocketConnection> connections = new HashMap<String, SocketConnection>();
+    private Socket client;
+    //	private SocketConnection connection;
+    private List<SocketConnection> connections = new ArrayList<SocketConnection>();
 
     public Server() {
         try {
