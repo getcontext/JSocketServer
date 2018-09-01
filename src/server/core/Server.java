@@ -7,14 +7,11 @@ import server.utils.FileUtils;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.*;
 
 /**
- *
  * @author andrzej.salamon@gmail.com
- *
  */
 public class Server extends Thread { //lets keep it extend
     private ServerSocket serverSocket = null;
@@ -22,20 +19,19 @@ public class Server extends Thread { //lets keep it extend
 
     private static ServerConfig config;
 
-    private Socket client;
+//    private Socket client;
     //	private SocketConnection connection;
     private List<SocketConnection> connections = new ArrayList<SocketConnection>();
 
     public Server() {
         try {
-            config = new ServerConfig("config" + FileUtils.FILE_SEPARATOR + "server.xml");
-            serverSocket = new ServerSocket(Integer.parseInt(config.get("port")));
+            Server.setConfig(new ServerConfig("config" + FileUtils.FILE_SEPARATOR + "server.xml"));
+            setServerSocket(new ServerSocket(Integer.parseInt(config.get("port"))));
         } catch (IOException e) {
             System.err.println("failed listening on port: " + config.get("port"));
             System.exit(1);
         }
 
-//		connection = new WebSocketModule(serverSocket);
         addDefaultModule();
 
         this.start();
@@ -43,7 +39,8 @@ public class Server extends Thread { //lets keep it extend
 
 
     protected void addDefaultModule() {
-        addModule(new WebSocketModule(serverSocket));
+
+        addModule(new WebSocketModule(getServerSocket()));
     }
 
     public void addModule(SocketConnection socketConnection) {
@@ -51,7 +48,7 @@ public class Server extends Thread { //lets keep it extend
             connections.add(socketConnection);
     }
 
-    public void startModules() {
+    protected void startModules() {
         if (connections.size() <= 0) return;
 
         for (SocketConnection conn : connections) {
@@ -68,8 +65,8 @@ public class Server extends Thread { //lets keep it extend
     }
 
     public void run() {
-
         System.out.println("Andrew Socket Server v. 1.0");
+        startModules();
         while (true) {
             try {//@todo thread pooling
                 sleep(1);
@@ -88,6 +85,13 @@ public class Server extends Thread { //lets keep it extend
         }
     }
 
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    public void setServerSocket(ServerSocket serverSocket) {
+        this.serverSocket = serverSocket;
+    }
 
     public static void main(String[] args) {
         new Server();
