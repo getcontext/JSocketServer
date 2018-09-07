@@ -43,8 +43,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
     public WebSocketModule(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
-        this.thread = new Thread(this, MODULE_NAME + "_" + counter);
-//        this.start();
+        this.thread = new Thread(this, MODULE_NAME + "_" + counter++);
     }
 
     public static int getCounter() {
@@ -95,9 +94,9 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
     @Override
     public void handleStream() {
         try {
-            client = serverSocket.accept();
-            out = new ObjectOutputStream(client.getOutputStream());
-            in = new ObjectInputStream(client.getInputStream());
+            setClient(serverSocket.accept());
+            out = new ObjectOutputStream(getClient().getOutputStream());
+            in = new ObjectInputStream(getClient().getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -139,7 +138,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
             if (close) {
                 try {
-                    out.writeObject(response); //@todo return resp headers is closed
+                    broadcast(response); //@todo return resp headers is closed
                     out.flush();
                     out.close();
                     in.close();
@@ -150,7 +149,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
                 }
             }
             try {
-                getThread().sleep(1);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -253,7 +252,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
         int len = rawData.length, frameCount;
 
         frame[0] = (byte) 129;
-/** @TODO: loop it */
+        /* @TODO: loop it */
         if (rawData.length <= 125) {
             frame[1] = (byte) len;
             frameCount = 2;
@@ -275,18 +274,17 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
             frameCount = 10;
         }
 
-        int bLength = frameCount + rawData.length;
-        int bLim = 0;
+        int responseLength = frameCount + rawData.length;
+        int responseLimit = 0;
 
-        responseByte = new byte[bLength];
+        responseByte = new byte[responseLength];
 
-        for (int i = 0; i < frameCount; i++) {
-            responseByte[bLim] = frame[i];
-            bLim++;
+        for (; responseLimit < frameCount; responseLimit++) {
+            responseByte[responseLimit] = frame[responseLimit];
         }
-        for (int i = 0; i < rawData.length; i++) {
-            responseByte[bLim] = rawData[i];
-            bLim++;
+
+        for (byte dataByte : rawData) {
+            responseByte[responseLimit++] = dataByte;
         }
 
         out.write(responseByte);
