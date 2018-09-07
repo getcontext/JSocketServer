@@ -9,5 +9,5 @@ public interface Connection {
 
     abstract String receive() throws IOException;
 
-    abstract void brodcast(String data) throws IOException;
+    abstract void broadcast(String data) throws IOException;
 }

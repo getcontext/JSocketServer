@@ -73,9 +73,9 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
     @Override
     public void handleStream(Socket client) {
         try {
-            this.client = client;
-            out = new ObjectOutputStream(client.getOutputStream());
-            in = new ObjectInputStream(client.getInputStream());
+            setClient(client);
+            out = new ObjectOutputStream(getClient().getOutputStream());
+            in = new ObjectInputStream(getClient().getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -92,7 +92,6 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
         return null;
     }
 
-    @Deprecated
     @Override
     public void handleStream() {
         try {
@@ -213,59 +212,58 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
         byte[] buffer = new byte[MAX_BUFFER];
         byte length = 0;
         int messageLength, maskIndex = 2, dataStart = 0;
+        String ret = null;
 
         messageLength = in.read(buffer);
         requestByte = new byte[messageLength];
+        if (messageLength == -1) {
+            return ret;
+        }
 
-        if (messageLength != -1) {
-            //b[0] is always text in my case so no need to check;
-            byte data = buffer[1];
-            byte op = (byte) 127;
-            length = (byte) (data & op);
+        //b[0] is always text in my case so no need to check;
+        byte data = buffer[1];
+        byte op = (byte) 127;
+        length = (byte) (data & op);
 
-            if (length == (byte) 126) maskIndex = 4;
-            if (length == (byte) 127) maskIndex = 10;
+        if (length == (byte) 126) maskIndex = 4;
+        if (length == (byte) 127) maskIndex = 10;
 
-            byte[] masks = new byte[4];
+        byte[] masks = new byte[4];
 
-            int j = 0;
-            int i;
-            for (i = maskIndex; i < (maskIndex + 4); i++) {
-                masks[j] = buffer[i];
-                j++;
-            }
+        int j = 0;
+        int i;
+        for (i = maskIndex; i < (maskIndex + 4); i++) {
+            masks[j] = buffer[i];
+            j++;
+        }
 
-            dataStart = maskIndex + 4;
+        dataStart = maskIndex + 4;
 
 
-            for (i = dataStart, j = 0; i < messageLength; i++, j++) {
-                requestByte[j] = (byte) (buffer[i] ^ masks[j % 4]);
-            }
+        for (i = dataStart, j = 0; i < messageLength; i++, j++) {
+            requestByte[j] = (byte) (buffer[i] ^ masks[j % 4]);
         }
 
         return new String(requestByte);
     }
 
     @Override
-    public void brodcast(String data) throws IOException {
+    public void broadcast(String data) throws IOException {
         byte[] rawData = data.getBytes();
-
-        int frameCount;
+        int len = rawData.length, frameCount;
 
         frame[0] = (byte) 129;
 /** @TODO: loop it */
         if (rawData.length <= 125) {
-            frame[1] = (byte) rawData.length;
+            frame[1] = (byte) len;
             frameCount = 2;
         } else if (rawData.length >= 126 && rawData.length <= 65535) {
             frame[1] = (byte) 126;
-            int len = rawData.length;
             frame[2] = (byte) ((len >> 8) & (byte) 255);
             frame[3] = (byte) (len & (byte) 255);
             frameCount = 4;
         } else {
             frame[1] = (byte) 127;
-            int len = rawData.length;
             frame[2] = (byte) ((len >> 56) & (byte) 255);
             frame[3] = (byte) ((len >> 48) & (byte) 255);
             frame[4] = (byte) ((len >> 40) & (byte) 255);
@@ -278,10 +276,10 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
         }
 
         int bLength = frameCount + rawData.length;
+        int bLim = 0;
 
         responseByte = new byte[bLength];
 
-        int bLim = 0;
         for (int i = 0; i < frameCount; i++) {
             responseByte[bLim] = frame[i];
             bLim++;

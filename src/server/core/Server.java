@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public class Server extends Thread { //lets keep it extend
+public final class Server extends Thread { //lets keep it extend
     private ServerSocket serverSocket = null;
     public static final String IP = getIp();
 
