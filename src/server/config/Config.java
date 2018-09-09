@@ -6,7 +6,7 @@ public class Config {
     private static HashMap<String, Config> config = new HashMap<String, Config>();
 
     protected Config() {
-        Config.addConfig("default", new Config());
+        Config.add("default", new Config());
     }
 
     public static Config create() {
@@ -21,7 +21,7 @@ public class Config {
         Config.config = config;
     }
 
-    public static void addConfig(String key, Config config) {
+    public static void add(String key, Config config) {
         get().put(key, config);
     }
 }

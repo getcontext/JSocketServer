@@ -31,10 +31,10 @@ public class ServerConfig {
 
     protected void read(String file) {
         try {
-            String rootDir = null;
+            String rootDir = "";
             try {
                 rootDir =
-                    getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("%20", " ");
+                        getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("%20", " ");
                 rootDir = new File(rootDir).getParent();
             } catch (Exception e) {
                 //throw e;
@@ -42,24 +42,20 @@ public class ServerConfig {
 
             file = rootDir + FileUtils.FILE_SEPARATOR + file;
 
-            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             Document doc = docBuilder.parse(new File(file));
             doc.getDocumentElement().normalize();
-
             NodeList childNodes = doc.getChildNodes();
+
             parameters.clear();
             for (int s = 0; s < childNodes.getLength(); s++) {
-
                 Node item = childNodes.item(s);
                 if (item.getNodeType() == Node.ELEMENT_NODE) {
-                    Element portElement = (Element)item;
-
-                    NodeList tagName = portElement.getElementsByTagName("port");
+                    Element element = (Element) item;
+                    NodeList tagName = element.getElementsByTagName("port");
                     parameters.put("port", tagName.item(0).getChildNodes().item(0).getNodeValue().trim());
                 }
             }
-
         } catch (SAXParseException err) {
             System.out.println("parsing error");
         } catch (ParserConfigurationException e) {
@@ -68,6 +64,8 @@ public class ServerConfig {
             System.out.println("general sax parser error");
         } catch (IOException e) {
             System.out.println("config file error");
+        } catch (Exception e) {
+            System.out.println("general parser error");
         }
     }
 
