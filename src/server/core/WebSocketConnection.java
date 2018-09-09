@@ -9,6 +9,7 @@ import java.security.NoSuchAlgorithmException;
  */
 public interface WebSocketConnection extends SocketConnection {
     Integer MAX_BUFFER = 5000;
+
     void sendHandshake() throws NoSuchAlgorithmException, IOException;
     boolean isHandshake();
     boolean isHandshake(String data);
