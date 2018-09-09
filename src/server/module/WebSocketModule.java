@@ -13,12 +13,13 @@ import java.util.regex.Pattern;
 
 import javax.xml.bind.DatatypeConverter;
 
+import server.core.Module;
 import server.core.WebSocketConnection;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class WebSocketModule implements Runnable, WebSocketConnection {
+public final class WebSocketModule extends Module implements Runnable, WebSocketConnection {
     public final static String MODULE_NAME = "websocket";
 
     private ObjectOutputStream out;
@@ -34,6 +35,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
     private boolean close = false;
     private static int counter = 0;
+    private int instanceNo;
     private boolean stop = false;
 
     private Socket client;
@@ -43,7 +45,8 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
     public WebSocketModule(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
-        this.thread = new Thread(this, MODULE_NAME + "_" + counter++);
+        this.instanceNo = counter++;
+        this.thread = new Thread(this, MODULE_NAME + "_" + instanceNo);
     }
 
     public static int getCounter() {
@@ -55,7 +58,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
     }
 
     public static void incrementCounter(int counter) {
-        WebSocketModule.counter = counter;
+        ++WebSocketModule.counter;
     }
 
     @Override
@@ -88,7 +91,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
     @Override
     public String getId() {
-        return null;
+        return MODULE_NAME;
     }
 
     @Override
@@ -110,7 +113,6 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
     public void run() {
         while (!stop) {
-
             try {
                 handleStream(serverSocket.accept());
             } catch (IOException e) {
@@ -128,7 +130,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
                     }
                 } else {
                     try {
-                        response = receive();
+                        receive();
 //                        System.out.println(response);
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -207,23 +209,24 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
     }
 
     @Override
-    public String receive() throws IOException {
+    public void receive() throws IOException {
         byte[] buffer = new byte[MAX_BUFFER];
-        byte length = 0;
-        int messageLength, maskIndex = 2, dataStart = 0;
-        String ret = null;
+        byte length;
+        int messageLength, maskIndex, dataStart;
 
         messageLength = in.read(buffer);
-        requestByte = new byte[messageLength];
         if (messageLength == -1) {
-            return ret;
+            return;
         }
+
+        requestByte = new byte[messageLength];
 
         //b[0] is always text in my case so no need to check;
         byte data = buffer[1];
         byte op = (byte) 127;
         length = (byte) (data & op);
 
+        maskIndex = 2;
         if (length == (byte) 126) maskIndex = 4;
         if (length == (byte) 127) maskIndex = 10;
 
@@ -238,12 +241,11 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
 
         dataStart = maskIndex + 4;
 
-
         for (i = dataStart, j = 0; i < messageLength; i++, j++) {
             requestByte[j] = (byte) (buffer[i] ^ masks[j % 4]);
         }
 
-        return new String(requestByte);
+        response = new String(requestByte);
     }
 
     @Override
@@ -256,7 +258,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
         if (rawData.length <= 125) {
             frame[1] = (byte) len;
             frameCount = 2;
-        } else if (rawData.length >= 126 && rawData.length <= 65535) {
+        } else if (rawData.length <= 65535) {
             frame[1] = (byte) 126;
             frame[2] = (byte) ((len >> 8) & (byte) 255);
             frame[3] = (byte) (len & (byte) 255);
@@ -296,7 +298,7 @@ public final class WebSocketModule implements Runnable, WebSocketConnection {
         return thread;
     }
 
-    public Socket getClient() {
+    private Socket getClient() {
         return client;
     }
 

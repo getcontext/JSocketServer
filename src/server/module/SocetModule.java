@@ -7,14 +7,13 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import server.core.ServerModule;
+import server.core.Module;
 import server.core.SocketConnection;
-import server.core.WebSocketConnection;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
-class SocketModule extends ServerModule implements Runnable, SocketConnection {
+class SocketModule extends Module implements Runnable, SocketConnection {
     public final static String MODULE_NAME = "socket";
 
     ObjectOutputStream out;
