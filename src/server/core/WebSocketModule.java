@@ -21,6 +21,7 @@ public abstract class WebSocketModule extends Module {
      * @todo refactor it to separate Handshake class
      */
     public void sendHandshake() throws NoSuchAlgorithmException, IOException {
+        //no text in class plz, mv, to cfg
         responseByte = ("HTTP/1.1 101 Switching Protocols\r\n"
                 + "WebSocketConnection: Upgrade\r\n"
                 + "Upgrade: websocket\r\n"
@@ -58,7 +59,7 @@ public abstract class WebSocketModule extends Module {
     public void receive() throws IOException {
         byte[] buffer = new byte[WebSocketConnection.MAX_BUFFER];
         byte length;
-        int messageLength, maskIndex, dataStart;
+        int messageLength, mask, dataStart;
 
         messageLength = in.read(buffer);
         if (messageLength == -1) {
@@ -68,30 +69,30 @@ public abstract class WebSocketModule extends Module {
         requestByte = new byte[messageLength];
 
         //b[0] is always text in my case so no need to check;
-        byte data = buffer[1];
+        byte data = buffer[1]; //does it cause a problem ?
         byte op = (byte) 127;
         length = (byte) (data & op);
 
-        maskIndex = 2;
-        if (length == (byte) 126) maskIndex = 4;
-        if (length == (byte) 127) maskIndex = 10;
+        mask = 2;  //lowest mask
+        if (length == (byte) 126) mask = 4;//med
+        if (length == (byte) 127) mask = 10; //max mask
 
         byte[] masks = new byte[4];
 
         int j = 0;
         int i;
-        for (i = maskIndex; i < (maskIndex + 4); i++) {
-            masks[j] = buffer[i];
+        for (i = mask; i < (mask + 4); i++) { //start at mask, stop at last + 4
+            masks[j] = buffer[i]; //problem here
             j++;
         }
 
-        dataStart = maskIndex + 4;
+        dataStart = mask + 4;
 
         for (i = dataStart, j = 0; i < messageLength; i++, j++) {
             requestByte[j] = (byte) (buffer[i] ^ masks[j % 4]);
         }
 
-        response = new String(requestByte);
+        response = new String(requestByte); //why now string copy of byte ?
     }
 
     public void broadcast(String data) throws IOException {
