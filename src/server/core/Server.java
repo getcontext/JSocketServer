@@ -1,7 +1,7 @@
 package server.core;
 
 import server.config.ServerConfig;
-import server.module.WebSocketModule;
+import server.module.WebSocket;
 import server.utils.FileUtils;
 
 import java.io.IOException;
@@ -40,7 +40,7 @@ public final class Server extends Thread { //lets keep it extend
 
     protected void addDefaultModule() {
 
-        addModule(new WebSocketModule(getServerSocket()));
+        addModule(new WebSocket(getServerSocket()));
     }
 
     public void addModule(SocketConnection socketConnection) {

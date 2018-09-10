@@ -5,7 +5,7 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import static server.module.WebSocketModule.MODULE_NAME; //@todo alias? or problem
+import static server.module.WebSocket.MODULE_NAME; //@todo alias? or problem
 
 /**
  * @todo add factory
@@ -23,7 +23,7 @@ public abstract class Module implements Runnable {
     protected boolean close = false;
     protected int instanceNo;
     protected boolean stop = false;
-    protected Socket client;
+    protected java.net.Socket client;
     protected ServerSocket serverSocket;
 
     public Module(ServerSocket serverSocket) {
@@ -53,7 +53,7 @@ public abstract class Module implements Runnable {
         return client;
     }
 
-    protected void setClient(Socket client) {
+    protected void setClient(java.net.Socket client) {
         this.client = client;
     }
 }
