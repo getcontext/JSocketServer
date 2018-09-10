@@ -99,7 +99,10 @@ public abstract class WebSocketModule extends Module {
         int len = rawData.length, frameCount;
 
         frame[0] = (byte) 129;
-        /* @TODO: loop it */
+        /* @TODO: loop it */ //or no, loop is more expensive in dat case
+        //is fixed, make it 2 dim static pre-comp,
+        //heart of app
+        //const logic and byte 255
         if (rawData.length <= 125) {
             frame[1] = (byte) len;
             frameCount = 2;

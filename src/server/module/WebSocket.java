@@ -13,7 +13,7 @@ import server.core.WebSocketConnection;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class WebSocket extends server.core.WebSocketModule implements WebSocketConnection {
+public final class WebSocket extends server.core.WebSocketModule implements WebSocketConnection { //double inheritance, not ellegant, ref,mv
     public final static String MODULE_NAME = "websocket";
 
 
@@ -41,6 +41,7 @@ public final class WebSocket extends server.core.WebSocketModule implements WebS
     public void handleStream(Socket client) {
         try {
             setClient(client);
+            //und dat naked fields ?
             out = new ObjectOutputStream(getClient().getOutputStream());
             in = new ObjectInputStream(getClient().getInputStream());
         } catch (IOException e) {
@@ -86,11 +87,11 @@ public final class WebSocket extends server.core.WebSocketModule implements WebS
 
             request = getRequestAsString();
 
-            if (isGet()) {
+            if (isGet()) { //wat dat iz ? mv, lambda, listener
                 if (isHandshake()) {
                     try {
                         sendHandshake();
-                    } catch (NoSuchAlgorithmException | IOException e) {
+                    } catch (NoSuchAlgorithmException | IOException e) { //ref ?
                         e.printStackTrace();
                     }
                 } else {
@@ -125,7 +126,7 @@ public final class WebSocket extends server.core.WebSocketModule implements WebS
 
     @Override
     public String getRequestAsString() {
-        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next();
+        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next(); //bullshit is slow, is immediate release of object
     }
 
 }
