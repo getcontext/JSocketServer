@@ -8,17 +8,16 @@ import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
-import server.core.Module;
 import server.core.WebSocketConnection;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class WebSocketModule extends server.core.WebSocketModule implements WebSocketConnection {
+public final class WebSocket extends server.core.WebSocketModule implements WebSocketConnection {
     public final static String MODULE_NAME = "websocket";
 
 
-    public WebSocketModule(ServerSocket serverSocket) {
+    public WebSocket(ServerSocket serverSocket) {
         super(serverSocket);
     }
 
@@ -31,6 +30,11 @@ public final class WebSocketModule extends server.core.WebSocketModule implement
     public void stop() {
         getThread().stop();
         stop = true;
+    }
+
+    @Override
+    public void broadcast() throws IOException {
+
     }
 
     @Override

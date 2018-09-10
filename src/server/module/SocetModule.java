@@ -5,7 +5,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import java.net.ServerSocket;
-import java.net.Socket;
 
 import server.core.Module;
 import server.core.SocketConnection;
@@ -13,25 +12,11 @@ import server.core.SocketConnection;
 /**
  * @author andrzej.salamon@gmail.com
  */
-class SocketModule extends Module implements Runnable, SocketConnection {
+class Socket extends Module implements Runnable, SocketConnection {
     public final static String MODULE_NAME = "socket";
 
-    ObjectOutputStream out;
-    ObjectInputStream in;
-
-    private boolean close = false;
-    private static int counter = 0;
-    private int instanceNo;
-    private boolean stop = false;
-
-    private Socket client;
-    private ServerSocket serverSocket;
-    private final Thread thread;
-
-    public SocketModule(ServerSocket serverSocket) {
-        this.serverSocket = serverSocket;
-        this.instanceNo = counter++;
-        this.thread = new Thread(this, MODULE_NAME + "_" + instanceNo);
+    public Socket(ServerSocket serverSocket) {
+        super(serverSocket);
     }
 
     @Override
@@ -45,7 +30,7 @@ class SocketModule extends Module implements Runnable, SocketConnection {
     }
 
     @Override
-    public void handleStream(Socket client) {
+    public void handleStream(java.net.Socket client) {
         try {
             setClient(client);
             out = new ObjectOutputStream(getClient().getOutputStream());
@@ -64,9 +49,8 @@ class SocketModule extends Module implements Runnable, SocketConnection {
 
     public void run() {
         try {
-//            request = (SerializedSocketObject)in.readObject();
-//            response = process(request);
-//            out.writeObject(response);
+receive();
+broadcast();
             out.flush();
             try {
                 out.close();
@@ -77,14 +61,6 @@ class SocketModule extends Module implements Runnable, SocketConnection {
             }
         } catch (Exception e) {
         }
-    }
-
-    private Socket getClient() {
-        return client;
-    }
-
-    private void setClient(Socket client) {
-        this.client = client;
     }
 
     @Override
@@ -99,11 +75,17 @@ class SocketModule extends Module implements Runnable, SocketConnection {
 
     @Override
     public void receive() throws IOException {
+//            request = (SerializedSocketObject)in.readObject();
+    }
+
+    @Override
+    public void broadcast() throws IOException {
 
     }
 
     @Override
     public void broadcast(String data) throws IOException {
-
+//            response = process(request);
+//            out.writeObject(response);
     }
 }
