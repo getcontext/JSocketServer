@@ -12,7 +12,7 @@ import server.core.SocketConnection;
 /**
  * @author andrzej.salamon@gmail.com
  */
-class Socket extends Module implements Runnable, SocketConnection {
+class Socket extends SocketModule {
     public final static String MODULE_NAME = "socket";
 
     public Socket(ServerSocket serverSocket) {

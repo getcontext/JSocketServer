@@ -1,4 +1,8 @@
-package server.core;
+package server.core.module;
+
+//import server.core;
+import server.core.Module;
+import server.core.WebSocketConnection;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -8,7 +12,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class WebSocketModule extends Module {
+
+public abstract class WebSocketModule extends Module implements WebSocketConnection {
     protected String secWebSocketKey;
 
     public WebSocketModule(ServerSocket serverSocket) {
