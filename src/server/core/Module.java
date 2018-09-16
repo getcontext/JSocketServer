@@ -10,7 +10,7 @@ import static server.module.WebSocket.MODULE_NAME; //@todo alias? or problem
 /**
  * @todo add factory
  */
-public abstract class Module implements Runnable {
+public abstract class Module implements Runnable, Connection {
     protected static int counter = 0;
     protected final Thread thread;
     protected ObjectOutputStream out;
@@ -55,5 +55,16 @@ public abstract class Module implements Runnable {
 
     protected void setClient(java.net.Socket client) {
         this.client = client;
+    }
+
+    @Override
+    public void start() {
+        getThread().start();
+    }
+
+    @Override
+    public void stop() {
+        getThread().stop();
+        stop = true;
     }
 }

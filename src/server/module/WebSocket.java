@@ -22,59 +22,8 @@ public final class WebSocket extends server.core.module.WebSocketModule { //doub
     }
 
     @Override
-    public void start() {
-        getThread().start();
-    }
-
-    @Override
-    public void stop() {
-        getThread().stop();
-        stop = true;
-    }
-
-    @Override
-    public void broadcast() throws IOException {
-
-    }
-
-    @Override
-    public void handleStream(Socket client) {
-        try {
-            setClient(client);
-            //und dat naked fields ?
-            out = new ObjectOutputStream(getClient().getOutputStream());
-            in = new ObjectInputStream(getClient().getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try { //try to close gracefully
-                client.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
     public String getId() {
         return MODULE_NAME;
-    }
-
-    @Override
-    public void handleStream() {
-        try {
-            setClient(serverSocket.accept());
-            out = new ObjectOutputStream(getClient().getOutputStream());
-            in = new ObjectInputStream(getClient().getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try { //try to close gracefully
-                getClient().close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public void run() {
@@ -122,11 +71,6 @@ public final class WebSocket extends server.core.module.WebSocketModule { //doub
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public String getRequestAsString() {
-        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next(); //bullshit is slow, is immediate release of object
     }
 
 }

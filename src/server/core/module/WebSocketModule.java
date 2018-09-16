@@ -6,9 +6,13 @@ import server.core.WebSocketConnection;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -84,9 +88,8 @@ public abstract class WebSocketModule extends Module implements WebSocketConnect
 
         byte[] masks = new byte[4];
 
-        int j = 0;
-        int i;
-        for (i = mask; i < (mask + 4); i++) { //start at mask, stop at last + 4
+        int j = 0, i=mask;
+        for (; i < (mask + 4); i++) { //start at mask, stop at last + 4
             masks[j] = buffer[i]; //problem here
             j++;
         }
@@ -146,5 +149,50 @@ public abstract class WebSocketModule extends Module implements WebSocketConnect
         out.write(responseByte);
         out.flush();
 
+    }
+
+    @Override
+    public void broadcast() throws IOException {
+
+    }
+
+    @Override
+    public void handleStream(Socket client) {
+        try {
+            setClient(client);
+            //und dat naked fields ?
+            out = new ObjectOutputStream(getClient().getOutputStream());
+            in = new ObjectInputStream(getClient().getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try { //try to close gracefully
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void handleStream() {
+        try {
+            setClient(serverSocket.accept());
+            out = new ObjectOutputStream(getClient().getOutputStream());
+            in = new ObjectInputStream(getClient().getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try { //try to close gracefully
+                getClient().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public String getRequestAsString() {
+        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next(); //bullshit is slow, is immediate release of object
     }
 }
