@@ -1,14 +1,17 @@
 package server.core;
 
 import server.config.ServerConfig;
-import server.module.WebSocket;
 import server.utils.FileUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+
+import server.module.*;
+//import server.module.WebSocket;
 
 /**
  * @author andrzej.salamon@gmail.com
@@ -41,6 +44,7 @@ public final class Server extends Thread { //lets keep it extend
     protected void addDefaultModule() {
 
         addModule(new WebSocket(getServerSocket()));
+        addModule(new Socket(getServerSocket()));
     }
 
     public void addModule(SocketConnection socketConnection) {
@@ -65,7 +69,7 @@ public final class Server extends Thread { //lets keep it extend
     }
 
     public void run() {
-        System.out.println("Andrew Socket Server v. 1.0");
+        System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
         startModules();
         while (true) {
             try {//@todo thread pooling

@@ -12,7 +12,7 @@ import server.core.module.SocketModule;
 /**
  * @author andrzej.salamon@gmail.com
  */
-class Socket extends SocketModule {
+public final class Socket extends SocketModule {
     public final static String MODULE_NAME = "socket";
 
     public Socket(ServerSocket serverSocket) {
@@ -49,12 +49,12 @@ class Socket extends SocketModule {
 
     public void run() {
         try {
-receive();
-broadcast();
+            receive();
+            broadcast();
             out.flush();
             try {
-                out.close();
-                in.close();
+//                out.close();
+//                in.close();
                 client.close();
             } catch (IOException e) {
                 // e.printStackTrace();
