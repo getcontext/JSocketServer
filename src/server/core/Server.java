@@ -24,7 +24,7 @@ public final class Server extends Thread { //lets keep it extend
 
 //    private Socket client;
     //	private SocketConnection connection;
-    private List<SocketConnection> connections = new ArrayList<SocketConnection>();
+    private List<Connection> connections = new ArrayList<>();
 
     public Server() {
         try {
@@ -47,7 +47,7 @@ public final class Server extends Thread { //lets keep it extend
         addModule(new Socket(getServerSocket()));
     }
 
-    public void addModule(SocketConnection socketConnection) {
+    public void addModule(Connection socketConnection) {
         if (!connections.contains(socketConnection))
             connections.add(socketConnection);
     }
@@ -55,7 +55,7 @@ public final class Server extends Thread { //lets keep it extend
     protected void startModules() {
         if (connections.size() <= 0) return;
 
-        for (SocketConnection conn : connections) {
+        for (Connection conn : connections) {
             conn.start();
         }
     }

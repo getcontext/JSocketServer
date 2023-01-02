@@ -5,7 +5,7 @@ import java.security.NoSuchAlgorithmException;
 
 /**
  * Created by wizard on 6/11/17.
- * @todo pull up
+ *
  */
 public interface WebSocketConnection extends SocketConnection {
     Integer MAX_BUFFER = 5000;
