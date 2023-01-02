@@ -6,8 +6,6 @@ import java.io.ObjectOutputStream;
 
 import java.net.ServerSocket;
 
-import server.core.Module;
-import server.core.SocketConnection;
 import server.core.module.SocketModule;
 /**
  * @author andrzej.salamon@gmail.com

@@ -1,7 +1,7 @@
 package server.core.module;
 
 //import server.core;
-import server.core.Module;
+import server.core.AbstractModule;
 import server.core.WebSocketConnection;
 
 import javax.xml.bind.DatatypeConverter;
@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public abstract class WebSocketModule extends Module implements WebSocketConnection {
+public abstract class WebSocketModule extends AbstractModule implements WebSocketConnection {
     protected String secWebSocketKey;
 
     public WebSocketModule(ServerSocket serverSocket) {
@@ -52,17 +52,9 @@ public abstract class WebSocketModule extends Module implements WebSocketConnect
         return match.find();
     }
 
-    public boolean isHandshake(String data) {
-        return false;
-    }
-
     public boolean isGet() {
         Matcher get = Pattern.compile("^GET").matcher(request);
         return get.find();
-    }
-
-    public boolean isGet(String data) {
-        return false;
     }
 
     public void receive() throws IOException {
@@ -160,7 +152,6 @@ public abstract class WebSocketModule extends Module implements WebSocketConnect
     public void handleStream(Socket client) {
         try {
             setClient(client);
-            //und dat naked fields ?
             out = new ObjectOutputStream(getClient().getOutputStream());
             in = new ObjectInputStream(getClient().getInputStream());
         } catch (IOException e) {

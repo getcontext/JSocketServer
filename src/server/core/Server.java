@@ -23,7 +23,9 @@ public final class Server extends Thread { //lets keep it extend
     private static ServerConfig config;
 
 //    private Socket client;
-    //	private SocketConnection connection;
+    private SocketConnection socketConnection;
+    private WebSocketConnection webSocketConnection;
+
     private List<SocketConnection> connections = new ArrayList<SocketConnection>();
 
     public Server() {
@@ -71,6 +73,8 @@ public final class Server extends Thread { //lets keep it extend
     public void run() {
         System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
         startModules();
+//        conn = new WebSocketConnection(serverSocket);
+
         while (true) {
             try {//@todo thread pooling
                 sleep(1);

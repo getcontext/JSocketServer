@@ -35,7 +35,7 @@ public class ServerConfig {
             try {
                 rootDir =
                         getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("%20", " ");
-                rootDir = new File(rootDir).getParent();
+//                rootDir = new File(rootDir).getParent();
             } catch (Exception e) {
                 //throw e;
             }

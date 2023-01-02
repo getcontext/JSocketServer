@@ -10,7 +10,7 @@ import static server.module.WebSocket.MODULE_NAME; //@todo alias? or problem
 /**
  * @todo add factory
  */
-public abstract class Module implements Runnable, Connection {
+public abstract class AbstractModule implements Runnable, Connection {
     protected static int counter = 0;
     protected final Thread thread;
     protected ObjectOutputStream out;
@@ -26,7 +26,7 @@ public abstract class Module implements Runnable, Connection {
     protected java.net.Socket client;
     protected ServerSocket serverSocket;
 
-    public Module(ServerSocket serverSocket) {
+    public AbstractModule(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
         this.instanceNo = counter++;
         this.thread = new Thread(this, MODULE_NAME + "_" + instanceNo);
@@ -38,11 +38,11 @@ public abstract class Module implements Runnable, Connection {
     }
 
     public static void setCounter(int counter) {
-        Module.counter = counter;
+        AbstractModule.counter = counter;
     }
 
     public static void incrementCounter(int counter) {
-        ++Module.counter;
+        ++AbstractModule.counter;
     }
 
     public Thread getThread() {
