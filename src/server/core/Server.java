@@ -32,6 +32,8 @@ public final class Server extends Thread { //lets keep it extend
         try {
             Server.setConfig(new ServerConfig("config" + FileUtils.FILE_SEPARATOR + "server.xml"));
             setServerSocket(new ServerSocket(Integer.parseInt(config.get("port"))));
+            //for performance reasons, it should be separate websocket serversocket on different port
+            //each of socket thread has own
         } catch (IOException e) {
             System.err.println("failed listening on port: " + config.get("port"));
             System.exit(1);
@@ -45,7 +47,7 @@ public final class Server extends Thread { //lets keep it extend
 
     protected void addDefaultModule() {
 
-        addModule(new WebSocket(getServerSocket()));
+        addModule(new WebSocket(getServerSocket())); //not sure if it is good to share 
         addModule(new Socket(getServerSocket()));
     }
 
@@ -73,7 +75,9 @@ public final class Server extends Thread { //lets keep it extend
     public void run() {
         System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
         startModules();
-//        conn = new WebSocketConnection(serverSocket);
+
+//        webSocketConnection = new WebSocket(serverSocket);
+//        socketConnection = new Socket(serverSocket);
 
         while (true) {
             try {//@todo thread pooling

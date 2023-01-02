@@ -59,7 +59,6 @@ public abstract class WebSocketModule extends AbstractModule implements WebSocke
 
     public void receive() throws IOException {
         byte[] buffer = new byte[WebSocketConnection.MAX_BUFFER];
-        byte length;
         int messageLength, mask, dataStart;
 
         messageLength = in.read(buffer);
@@ -72,6 +71,8 @@ public abstract class WebSocketModule extends AbstractModule implements WebSocke
         //b[0] is always text in my case so no need to check;
         byte data = buffer[1]; //does it cause a problem ?
         byte op = (byte) 127;
+        byte length;
+
         length = (byte) (data & op);
 
         mask = 2;  //lowest mask
@@ -184,6 +185,6 @@ public abstract class WebSocketModule extends AbstractModule implements WebSocke
 
     @Override
     public String getRequestAsString() {
-        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next(); //bullshit is slow, is immediate release of object
+        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next();
     }
 }

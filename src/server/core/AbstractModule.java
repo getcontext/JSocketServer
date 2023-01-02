@@ -13,6 +13,7 @@ import static server.module.WebSocket.MODULE_NAME; //@todo alias? or problem
 public abstract class AbstractModule implements Runnable, Connection {
     protected static int counter = 0;
     protected final Thread thread;
+
     protected ObjectOutputStream out;
     protected ObjectInputStream in;
     protected byte[] requestByte;
