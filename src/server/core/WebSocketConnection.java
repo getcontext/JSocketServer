@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 /**
  * @author andrzej.salamon@gmail.com
  */
-class WebSocketConnection extends Thread implements Connection {
+class WebSocketConnection extends Thread {
 
     ObjectOutputStream out;
     ObjectInputStream in;
@@ -35,7 +35,6 @@ class WebSocketConnection extends Thread implements Connection {
         this.start();
     }
 
-    @Override
     public void handleStream() {
         try {
             client = serverSocket.accept();
@@ -51,7 +50,21 @@ class WebSocketConnection extends Thread implements Connection {
             }
         }
     }
-
+    public void handleStream(Socket client) {
+        try {
+            this.client = client;
+            out = new ObjectOutputStream(client.getOutputStream());
+            in = new ObjectInputStream(client.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try { //try to close gracefully
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public void run() {
         while (true) {
             handleStream();
@@ -94,7 +107,6 @@ class WebSocketConnection extends Thread implements Connection {
         }
     }
 
-    @Override
     public void sendHandshake() throws NoSuchAlgorithmException, IOException {
         byte[] response;
         response = ("HTTP/1.1 101 Switching Protocols\r\n"
@@ -112,27 +124,23 @@ class WebSocketConnection extends Thread implements Connection {
         out.write(response, 0, response.length);
     }
 
-    @Override
     public boolean isHandshake(String data) {
         Matcher match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(data);
         secWebSocketKey = match.group(1);
         return match.find();
     }
 
-    @Override
     public boolean isGet(String data) {
         Matcher get = Pattern.compile("^GET").matcher(data);
         return get.find();
     }
 
-    @Override
     public String getRequestAsString() {
         return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next();
     }
 
-    @Override
     public String read() throws IOException {
-        byte[] buffer = new byte[MAX_BUFFER];
+        byte[] buffer = new byte[5000];
         int len;
         int messLen;
         byte rLength = 0;
@@ -172,7 +180,6 @@ class WebSocketConnection extends Thread implements Connection {
         return new String(message);
     }
 
-    @Override
     public void brodcast(String data) throws IOException{
         byte[] rawData = data.getBytes();
 

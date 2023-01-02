@@ -24,7 +24,7 @@ public class Server extends Thread {
     private static ServerConfig config;
 
     private Socket client;
-    private Connection conn;
+    private WebSocketConnection conn;
 
     public Server() {
         try {
@@ -57,9 +57,12 @@ public class Server extends Thread {
 
         while (true) {
             try {
+                client = serverSocket.accept(); //give it for socket
                 sleep(1);
             } catch (InterruptedException e) {
                 System.err.println("sleep failed");
+            } catch (IOException e) {
+                System.err.println("cant accept socket");
             }
         }
     }
