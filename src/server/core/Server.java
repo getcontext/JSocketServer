@@ -82,7 +82,7 @@ public final class Server extends Thread { //lets keep it extend
 
         while (true) {
             try {//@todo thread pooling
-                sleep(1);
+                sleep(10000);
             } catch (InterruptedException e) {
                 System.err.println("sleep failed");
             }

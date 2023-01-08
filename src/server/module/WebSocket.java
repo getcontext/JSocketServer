@@ -36,7 +36,7 @@ public final class WebSocket extends server.core.module.WebSocketModule { //doub
 
             request = getRequestAsString();
 
-            if (isGet()) { //wat dat iz ? mv, lambda, listener
+            if (isGet()) { //mv, lambda, listener
                 if (isHandshake()) {
                     try {
                         sendHandshake();
@@ -45,7 +45,7 @@ public final class WebSocket extends server.core.module.WebSocketModule { //doub
                     }
                 } else {
                     try {
-                        receive();
+                        receive(); //@todo add responsive listener(s) as many as someone wants
 //                        System.out.println(response);
                     } catch (IOException e) {
                         e.printStackTrace();
