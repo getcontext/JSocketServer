@@ -18,6 +18,7 @@ import server.module.*;
  */
 public final class Server extends Thread { //lets keep it extend
     private ServerSocket serverSocket = null;
+    private ServerSocket serverWebSocket = null;
     public static final String IP = getIp();
 
     private static ServerConfig config;
