@@ -32,12 +32,7 @@ public class ServerConfig {
 
     protected void read(String file) {
         try {
-            String rootDir = "";
-            try {
-                rootDir = System.getProperty("user.dir");
-            } catch (Exception e) {
-                //throw e;
-            }
+            String rootDir = System.getProperty("user.dir");
 
             file = rootDir + FileUtils.FILE_SEPARATOR + file;
 
