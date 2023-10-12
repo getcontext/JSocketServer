@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -23,7 +24,7 @@ import org.xml.sax.SAXParseException;
 
 
 public class ServerConfig {
-    private Map<String, String> parameters = new HashMap<String, String>();
+    private final Map<String, String> parameters = new HashMap<String, String>();
 
     public ServerConfig(String file) {
         read(file);
@@ -33,16 +34,20 @@ public class ServerConfig {
         try {
             String rootDir = "";
             try {
-                rootDir =
-                        getClass().getProtectionDomain().getCodeSource().getLocation().getPath().replace("%20", " ");
-//                rootDir = new File(rootDir).getParent();
+                rootDir = System.getProperty("user.dir");
             } catch (Exception e) {
                 //throw e;
             }
 
             file = rootDir + FileUtils.FILE_SEPARATOR + file;
 
-            DocumentBuilder docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+//            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+//
+//            factory.setFeature(XMLInputFactory.SUPPORT_DTD, false);
+
+            DocumentBuilder docBuilder = factory.newDocumentBuilder();
             Document doc = docBuilder.parse(new File(file));
             doc.getDocumentElement().normalize();
             NodeList childNodes = doc.getChildNodes();
@@ -63,7 +68,7 @@ public class ServerConfig {
         } catch (SAXException e) {
             System.out.println("general sax parser error");
         } catch (IOException e) {
-            System.out.println("config file error");
+            System.out.println("config file read error");
         } catch (Exception e) {
             System.out.println("general parser error");
         }
