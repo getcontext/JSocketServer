@@ -16,7 +16,9 @@ import server.module.*;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class Server extends Thread { //lets keep it extend
+public final class Server extends Thread {
+    private static final String FILE_CONFIG_SERVER_XML = "server.xml";
+    public static final String DIR_CONFIG = "config";
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
     public static final String IP = getIp();
@@ -31,8 +33,9 @@ public final class Server extends Thread { //lets keep it extend
 
     public Server() {
         try {
-            Server.setConfig(new ServerConfig("config" + FileUtils.FILE_SEPARATOR + "server.xml"));
+            Server.setConfig(new ServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
             setServerSocket(new ServerSocket(Integer.parseInt(config.get("port"))));
+            setServerWebSocket(new ServerSocket(Integer.parseInt(config.get("websocketPort"))));
             //for performance reasons, it should be separate websocket serversocket on different port
             //each of socket thread has own
         } catch (IOException e) {
@@ -105,6 +108,10 @@ public final class Server extends Thread { //lets keep it extend
 
     public void setServerSocket(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
+    }
+
+    public void setServerWebSocket(ServerSocket serverWebSocket) {
+        this.serverWebSocket = serverWebSocket;
     }
 
     public static void main(String[] args) {
