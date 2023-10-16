@@ -14,7 +14,7 @@ import server.core.WebSocketConnection;
  * @author andrzej.salamon@gmail.com
  */
 public final class WebSocket extends server.core.module.WebSocketModule { //double inheritance, not ellegant, ref,mv
-    public final static String MODULE_NAME = "websocket";
+    public static final String MODULE_NAME = "websocket";
 
 
     public WebSocket(ServerSocket serverSocket) {

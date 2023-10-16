@@ -58,7 +58,7 @@ public final class Server extends Thread { //lets keep it extend
     }
 
     protected void startModules() {
-        if (connections.size() <= 0) return;
+        if (connections.isEmpty()) return;
 
         for (SocketConnection conn : connections) {
             conn.start();
@@ -73,6 +73,7 @@ public final class Server extends Thread { //lets keep it extend
         Server.config = config;
     }
 
+    @Override
     public void run() {
         System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
         startModules();

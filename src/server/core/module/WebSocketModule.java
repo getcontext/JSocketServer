@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
@@ -40,9 +41,9 @@ public abstract class WebSocketModule extends AbstractModule implements WebSocke
                         MessageDigest
                                 .getInstance("SHA-1")
                                 .digest((secWebSocketKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
-                                        .getBytes("UTF-8")))
+                                        .getBytes(StandardCharsets.UTF_8)))
                 + "\r\n\r\n")
-                .getBytes("UTF-8");
+                .getBytes(StandardCharsets.UTF_8);
         out.write(responseByte, 0, responseByte.length);
     }
 

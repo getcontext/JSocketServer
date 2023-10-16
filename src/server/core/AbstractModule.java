@@ -27,7 +27,7 @@ public abstract class AbstractModule implements Runnable, Connection {
     protected java.net.Socket client;
     protected ServerSocket serverSocket;
 
-    public AbstractModule(ServerSocket serverSocket) {
+    protected AbstractModule(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
         this.instanceNo = counter++;
         this.thread = new Thread(this, MODULE_NAME + "_" + instanceNo);
@@ -42,8 +42,11 @@ public abstract class AbstractModule implements Runnable, Connection {
         AbstractModule.counter = counter;
     }
 
-    public static void incrementCounter(int counter) {
+    public static void incrementCounter() {
         ++AbstractModule.counter;
+    }
+    public static void decrementCounter() {
+        --AbstractModule.counter;
     }
 
     public Thread getThread() {
@@ -67,5 +70,7 @@ public abstract class AbstractModule implements Runnable, Connection {
     public void stop() {
         getThread().stop();
         stop = true;
+        decrementCounter();
+        instanceNo = -1;
     }
 }

@@ -39,8 +39,8 @@ public class ServerConfig {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-
-            factory.setFeature(XMLInputFactory.SUPPORT_DTD, false);
+//
+//            factory.setAttribute(XMLInputFactory.SUPPORT_DTD, false);
 
             DocumentBuilder docBuilder = factory.newDocumentBuilder();
             Document doc = docBuilder.parse(new File(file));
