@@ -12,7 +12,6 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLInputFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -39,8 +38,6 @@ public class ServerConfig {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
             factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-//
-//            factory.setAttribute(XMLInputFactory.SUPPORT_DTD, false);
 
             DocumentBuilder docBuilder = factory.newDocumentBuilder();
             Document doc = docBuilder.parse(new File(file));
@@ -51,9 +48,8 @@ public class ServerConfig {
             for (int s = 0; s < childNodes.getLength(); s++) {
                 Node item = childNodes.item(s);
                 if (item.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) item;
-                    NodeList tagName = element.getElementsByTagName("port");
-                    parameters.put("port", tagName.item(0).getChildNodes().item(0).getNodeValue().trim());
+                    setParameter((Element) item, "port");
+                    setParameter((Element) item, "websocketPort");
                 }
             }
         } catch (SAXParseException err) {
@@ -67,6 +63,12 @@ public class ServerConfig {
         } catch (Exception e) {
             System.out.println("general parser error");
         }
+    }
+
+    private void setParameter(Element item, String name) {
+        Element element = item;
+        NodeList tagName = element.getElementsByTagName(name);
+        parameters.put(name, tagName.item(0).getChildNodes().item(0).getNodeValue().trim());
     }
 
     public String get(String key) {
