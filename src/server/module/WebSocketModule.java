@@ -1,23 +1,19 @@
 package server.module;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.NoSuchAlgorithmException;
-import java.util.Scanner;
+import server.core.connection.WebSocketConnectionAbstract;
 
-import server.core.WebSocketConnection;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class WebSocket extends server.core.module.WebSocketModule { //double inheritance, not ellegant, ref,mv
+public final class WebSocketModule extends WebSocketConnectionAbstract { //double inheritance, not ellegant, ref,mv
     public static final String MODULE_NAME = "websocket";
 
 
-    public WebSocket(ServerSocket serverSocket) {
+    public WebSocketModule(ServerSocket serverSocket) {
         super(serverSocket);
     }
 

@@ -1,15 +1,11 @@
-package server.core.module;
+package server.core.connection;
 
 //import server.core;
-import server.core.AbstractModule;
-import server.core.WebSocketConnection;
+import server.core.ConnectionAbstract;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,10 +14,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public abstract class WebSocketModule extends AbstractModule implements WebSocketConnection {
+public abstract class WebSocketConnectionAbstract extends ConnectionAbstract implements server.core.WebSocketConnection {
     protected String secWebSocketKey;
 
-    public WebSocketModule(ServerSocket serverSocket) {
+    public WebSocketConnectionAbstract(ServerSocket serverSocket) {
         super(serverSocket);
     }
 
@@ -59,7 +55,7 @@ public abstract class WebSocketModule extends AbstractModule implements WebSocke
     }
 
     public void receive() throws IOException {
-        byte[] buffer = new byte[WebSocketConnection.MAX_BUFFER];
+        byte[] buffer = new byte[server.core.WebSocketConnection.MAX_BUFFER];
         int messageLength, mask, dataStart;
 
         messageLength = in.read(buffer);
@@ -148,40 +144,6 @@ public abstract class WebSocketModule extends AbstractModule implements WebSocke
     @Override
     public void broadcast() throws IOException {
 
-    }
-
-    @Override
-    public void handleStream(Socket client) {
-        try {
-            setClient(client);
-            out = new ObjectOutputStream(getClient().getOutputStream());
-            in = new ObjectInputStream(getClient().getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try { //try to close gracefully
-                client.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void handleStream() {
-        try {
-            setClient(serverSocket.accept());
-            out = new ObjectOutputStream(getClient().getOutputStream());
-            in = new ObjectInputStream(getClient().getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try { //try to close gracefully
-                getClient().close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override

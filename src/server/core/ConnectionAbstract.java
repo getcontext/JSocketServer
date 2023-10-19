@@ -1,16 +1,17 @@
 package server.core;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import static server.module.WebSocket.MODULE_NAME; //@todo alias? or problem
+import static server.module.WebSocketModule.MODULE_NAME; //@todo alias? or problem
 
 /**
  * @todo add factory
  */
-public abstract class AbstractModule implements Runnable, Connection {
+public abstract class ConnectionAbstract implements Runnable, Connection {
     protected static int counter = 0;
     protected final Thread thread;
 
@@ -27,7 +28,7 @@ public abstract class AbstractModule implements Runnable, Connection {
     protected java.net.Socket client;
     protected ServerSocket serverSocket;
 
-    protected AbstractModule(ServerSocket serverSocket) {
+    protected ConnectionAbstract(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
         this.instanceNo = counter++;
         this.thread = new Thread(this, MODULE_NAME + "_" + instanceNo);
@@ -39,14 +40,14 @@ public abstract class AbstractModule implements Runnable, Connection {
     }
 
     public static void setCounter(int counter) {
-        AbstractModule.counter = counter;
+        ConnectionAbstract.counter = counter;
     }
 
     public static void incrementCounter() {
-        ++AbstractModule.counter;
+        ++ConnectionAbstract.counter;
     }
     public static void decrementCounter() {
-        --AbstractModule.counter;
+        --ConnectionAbstract.counter;
     }
 
     public Thread getThread() {
@@ -72,5 +73,37 @@ public abstract class AbstractModule implements Runnable, Connection {
         stop = true;
         decrementCounter();
         instanceNo = -1;
+    }
+
+    public void handleStream(Socket client) {
+        try {
+            setClient(client);
+            out = new ObjectOutputStream(getClient().getOutputStream());
+            in = new ObjectInputStream(getClient().getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try { //try to close gracefully
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void handleStream() {
+        try {
+            setClient(serverSocket.accept());
+            out = new ObjectOutputStream(getClient().getOutputStream());
+            in = new ObjectInputStream(getClient().getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try { //try to close gracefully
+                getClient().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

@@ -26,10 +26,11 @@ public final class Server extends Thread {
     private static ServerConfig config;
 
 //    private Socket client;
-    private SocketConnection socketConnection;
-    private WebSocketConnection webSocketConnection;
+//    private SocketConnection socketConnection;
+//    private WebSocketConnection webSocketConnection;
 
-    private List<SocketConnection> connections = new ArrayList<SocketConnection>();
+    private final List<SocketConnection> connections = new ArrayList<SocketConnection>();
+    private boolean running;
 
     public Server() {
         try {
@@ -49,10 +50,10 @@ public final class Server extends Thread {
     }
 
 
-    protected void addDefaultModule() {
+    private void addDefaultModule() {
 
-        addModule(new WebSocket(getServerSocket())); //not sure if it is good to share 
-        addModule(new Socket(getServerSocket()));
+        addModule(new WebSocketModule(getServerWebSocket())); //not sure if it is good to share
+        addModule(new SocketModule(getServerSocket()));
     }
 
     public void addModule(SocketConnection socketConnection) {
@@ -60,7 +61,7 @@ public final class Server extends Thread {
             connections.add(socketConnection);
     }
 
-    protected void startModules() {
+    private void startModules() {
         if (connections.isEmpty()) return;
 
         for (SocketConnection conn : connections) {
@@ -68,6 +69,13 @@ public final class Server extends Thread {
         }
     }
 
+    private void stopModules() {
+        if (connections.isEmpty()) return;
+
+        for (SocketConnection conn : connections) {
+            conn.stop();
+        }
+    }
     public static ServerConfig getConfig() {
         return config;
     }
@@ -84,11 +92,16 @@ public final class Server extends Thread {
 //        webSocketConnection = new WebSocket(serverSocket);
 //        socketConnection = new Socket(serverSocket);
 
-        while (true) {
+        running = true;
+        while (running) {
             try {//@todo thread pooling
                 sleep(10000);
             } catch (InterruptedException e) {
                 System.err.println("sleep failed");
+            }
+            if(!running) {
+                stopModules();
+                return;
             }
         }
     }
@@ -112,6 +125,14 @@ public final class Server extends Thread {
 
     public void setServerWebSocket(ServerSocket serverWebSocket) {
         this.serverWebSocket = serverWebSocket;
+    }
+
+    public ServerSocket getServerWebSocket() {
+        return this.serverWebSocket;
+    }
+
+    public void stopServer() {
+        running = false;
     }
 
     public static void main(String[] args) {
