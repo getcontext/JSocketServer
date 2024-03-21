@@ -31,12 +31,13 @@ public final class Server extends Thread {
 
     private final List<SocketConnection> connections = new ArrayList<SocketConnection>();
     private boolean running;
+    private boolean stop = false;
 
     public Server() {
         try {
             Server.setConfig(new ServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
-            setServerSocket(new ServerSocket(Integer.parseInt(config.get("port"))));
-            setServerWebSocket(new ServerSocket(Integer.parseInt(config.get("websocketPort"))));
+            setServerSocket(new ServerSocket(Integer.parseInt(getConfig().get("port"))));
+            setServerWebSocket(new ServerSocket(Integer.parseInt(getConfig().get("websocketPort"))));
             //for performance reasons, it should be separate websocket serversocket on different port
             //each of socket thread has own
         } catch (IOException e) {
@@ -76,6 +77,7 @@ public final class Server extends Thread {
             conn.stop();
         }
     }
+
     public static ServerConfig getConfig() {
         return config;
     }
@@ -95,12 +97,13 @@ public final class Server extends Thread {
         running = true;
         while (running) {
             try {//@todo thread pooling
-                sleep(10000);
+                sleep(1000);
             } catch (InterruptedException e) {
                 System.err.println("sleep failed");
             }
-            if(!running) {
+            if (stop) {
                 stopModules();
+                stopServer();
                 return;
             }
         }
@@ -136,7 +139,8 @@ public final class Server extends Thread {
     }
 
     public static void main(String[] args) {
-        new Server();
+
+        Server server = new Server();
     }
 
 

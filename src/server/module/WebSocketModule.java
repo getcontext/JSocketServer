@@ -24,11 +24,7 @@ public final class WebSocketModule extends WebSocketConnectionAbstract { //doubl
 
     public void run() {
         while (!stop) {
-            try {
-                handleStream(serverSocket.accept());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            processStream();
 
             request = getRequestAsString();
 
@@ -52,20 +48,40 @@ public final class WebSocketModule extends WebSocketConnectionAbstract { //doubl
             if (close) {
                 try {
                     broadcast(response); //@todo return resp headers is closed
-                    out.flush();
-                    out.close();
-                    in.close();
+                } catch (IOException e) {
+                    System.err.println("cant broadcast");
+                    e.printStackTrace();
+                }
+                try {
+                    outputStream.flush();
+                } catch (IOException e) {
+                    System.err.println("cant flush");
+                    e.printStackTrace();
+                }
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    System.err.println("cant close output stream");
+                    e.printStackTrace();
+                }
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    System.err.println("cant inputSTream close");
+                    e.printStackTrace();
+                }
+                try {
                     getClient().close();
                 } catch (IOException e) {
-                    System.err.println("unable to close");
+                    System.err.println("unable to close client");
                     System.err.println("Failed processing client request");
                 }
             }
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                Thread.sleep(1);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 

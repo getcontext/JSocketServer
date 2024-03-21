@@ -1,18 +1,20 @@
 package server.module;
 
-import java.io.IOException;
-
-import java.net.ServerSocket;
-
 import server.core.connection.SocketConnectionAbstract;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class SocketModule extends SocketConnectionAbstract {
-    public final static String MODULE_NAME = "socket";
+public final class WebModule extends SocketConnectionAbstract {
+    public static final String MODULE_NAME = "webModuleSocket";
 
-    public SocketModule(ServerSocket serverSocket) {
+    private PrintWriter printWriter;
+
+    public WebModule(ServerSocket serverSocket) {
         super(serverSocket);
     }
 
@@ -39,32 +41,23 @@ public final class SocketModule extends SocketConnectionAbstract {
 //                    // e.printStackTrace();
 //                }
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
 
-//    @Override
-//    public void start() {
-//
-//    }
-//
-//    @Override
-//    public void stop() {
-//
-//    }
-
     @Override
     public void receive() throws IOException {
-//            request = (SerializedSocketObject)in.readObject();
+
     }
 
     @Override
     public void broadcast() throws IOException {
+
     }
 
     @Override
     public void broadcast(String data) throws IOException {
-//            response = process(request);
-//            out.writeObject(response);
+
     }
 }

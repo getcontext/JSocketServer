@@ -1,8 +1,6 @@
 package server.core;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -14,9 +12,10 @@ import static server.module.WebSocketModule.MODULE_NAME; //@todo alias? or probl
 public abstract class ConnectionAbstract implements Runnable, Connection {
     protected static int counter = 0;
     protected final Thread thread;
-
-    protected ObjectOutputStream out;
-    protected ObjectInputStream in;
+//    protected ObjectOutputStream out;
+//    protected ObjectInputStream in;
+    protected OutputStream outputStream;
+    protected InputStream inputStream;
     protected byte[] requestByte;
     protected byte[] responseByte;
     protected byte[] frame = new byte[10];
@@ -31,7 +30,7 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     protected ConnectionAbstract(ServerSocket serverSocket) {
         this.serverSocket = serverSocket;
         this.instanceNo = counter++;
-        this.thread = new Thread(this, MODULE_NAME + "_" + instanceNo);
+        this.thread = new Thread(this, MODULE_NAME + instanceNo);
 
     }
 
@@ -46,6 +45,7 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     public static void incrementCounter() {
         ++ConnectionAbstract.counter;
     }
+
     public static void decrementCounter() {
         --ConnectionAbstract.counter;
     }
@@ -65,21 +65,23 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     @Override
     public void start() {
         getThread().start();
+        incrementCounter();
     }
 
     @Override
     public void stop() {
-        getThread().stop();
+//        getThread().stop();
+        getThread().interrupt();
         stop = true;
         decrementCounter();
         instanceNo = -1;
     }
 
-    public void handleStream(Socket client) {
+    public void processStream(Socket client) {
         try {
             setClient(client);
-            out = new ObjectOutputStream(getClient().getOutputStream());
-            in = new ObjectInputStream(getClient().getInputStream());
+            outputStream = new ObjectOutputStream(getClient().getOutputStream());
+            inputStream = new ObjectInputStream(getClient().getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -91,19 +93,12 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
         }
     }
 
-    public void handleStream() {
+    public void processStream() {
         try {
-            setClient(serverSocket.accept());
-            out = new ObjectOutputStream(getClient().getOutputStream());
-            in = new ObjectInputStream(getClient().getInputStream());
+            processStream(serverSocket.accept());
         } catch (IOException e) {
             e.printStackTrace();
-        } finally {
-            try { //try to close gracefully
-                getClient().close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            throw new RuntimeException(e);
         }
     }
 }

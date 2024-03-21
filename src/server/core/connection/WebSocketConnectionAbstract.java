@@ -2,6 +2,7 @@ package server.core.connection;
 
 //import server.core;
 import server.core.ConnectionAbstract;
+import server.core.WebSocketConnection;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.IOException;
@@ -14,7 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public abstract class WebSocketConnectionAbstract extends ConnectionAbstract implements server.core.WebSocketConnection {
+public abstract class WebSocketConnectionAbstract extends ConnectionAbstract implements WebSocketConnection {
     protected String secWebSocketKey;
 
     public WebSocketConnectionAbstract(ServerSocket serverSocket) {
@@ -40,7 +41,7 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
                                         .getBytes(StandardCharsets.UTF_8)))
                 + "\r\n\r\n")
                 .getBytes(StandardCharsets.UTF_8);
-        out.write(responseByte, 0, responseByte.length);
+        outputStream.write(responseByte, 0, responseByte.length);
     }
 
     public boolean isHandshake() {
@@ -58,7 +59,7 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
         byte[] buffer = new byte[server.core.WebSocketConnection.MAX_BUFFER];
         int messageLength, mask, dataStart;
 
-        messageLength = in.read(buffer);
+        messageLength = inputStream.read(buffer);
         if (messageLength == -1) {
             return;
         }
@@ -136,8 +137,8 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
             responseByte[responseLimit++] = dataByte;
         }
 
-        out.write(responseByte);
-        out.flush();
+        outputStream.write(responseByte);
+        outputStream.flush();
 
     }
 
@@ -148,6 +149,6 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
 
     @Override
     public String getRequestAsString() {
-        return new Scanner(in, "UTF-8").useDelimiter("\\r\\n\\r\\n").next();
+        return new Scanner(inputStream, "UTF-8").useDelimiter("\\r\\n\\r\\n").next();
     }
 }

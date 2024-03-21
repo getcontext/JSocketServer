@@ -8,6 +8,6 @@ import java.net.Socket;
  */
 public interface SocketConnection extends Connection {
 	String getId();
-    void handleStream();
-    void handleStream(Socket client);
+    void processStream();
+    void processStream(Socket client);
 }
