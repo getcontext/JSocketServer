@@ -21,6 +21,7 @@ public final class Server extends Thread {
     public static final String DIR_CONFIG = "config";
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
+    private ServerSocket serverWeb = null;
     public static final String IP = getIp();
 
     private static ServerConfig config;
@@ -38,6 +39,7 @@ public final class Server extends Thread {
             Server.setConfig(new ServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
             setServerSocket(new ServerSocket(Integer.parseInt(getConfig().get("port"))));
             setServerWebSocket(new ServerSocket(Integer.parseInt(getConfig().get("websocketPort"))));
+            setServerWeb(new ServerSocket(Integer.parseInt(getConfig().get("webPort"))));
             //for performance reasons, it should be separate websocket serversocket on different port
             //each of socket thread has own
         } catch (IOException e) {
@@ -45,16 +47,25 @@ public final class Server extends Thread {
             System.exit(1);
         }
 
-        addDefaultModule();
+        addDefaultModules();
 
         this.start();
     }
 
+    private void setServerWeb(ServerSocket serverWebPort) {
+        this.serverWeb = serverWebPort;
+    }
 
-    private void addDefaultModule() {
+
+    private void addDefaultModules() {
 
         addModule(new WebSocketModule(getServerWebSocket())); //not sure if it is good to share
         addModule(new SocketModule(getServerSocket()));
+        addModule(new WebModule(getServerWeb()));
+    }
+
+    private ServerSocket getServerWeb() {
+        return serverWeb;
     }
 
     public void addModule(SocketConnection socketConnection) {
@@ -97,7 +108,7 @@ public final class Server extends Thread {
         running = true;
         while (running) {
             try {//@todo thread pooling
-                sleep(1000);
+                sleep(1000); //sleep server for a while
             } catch (InterruptedException e) {
                 System.err.println("sleep failed");
             }

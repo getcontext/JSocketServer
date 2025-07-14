@@ -50,6 +50,7 @@ public class ServerConfig {
                 if (item.getNodeType() == Node.ELEMENT_NODE) {
                     setParameter((Element) item, "port");
                     setParameter((Element) item, "websocketPort");
+                    setParameter((Element) item, "webPort");
                 }
             }
         } catch (SAXParseException err) {
