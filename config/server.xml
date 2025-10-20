@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config>	
-	<port>6050</port>
+	<socketPort>6050</socketPort>
 	<websocketPort>6051</websocketPort>
-	<webPort>8080</webPort>
+	<webPort>8081</webPort>
 </config>

@@ -18,6 +18,9 @@ import server.module.*;
  */
 public final class Server extends Thread {
     private static final String FILE_CONFIG_SERVER_XML = "server.xml";
+    private static final String FILE_CONFIG_SERVER_PROPS = "server.properties";
+    private static final String FILE_CONFIG_SERVER_YML = "server.yml";
+
     public static final String DIR_CONFIG = "config";
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
@@ -33,23 +36,62 @@ public final class Server extends Thread {
     private final List<SocketConnection> connections = new ArrayList<SocketConnection>();
     private boolean running;
     private boolean stop = false;
+    private boolean exitOnFail = true;
+    private boolean startFailed = false;
 
     public Server() {
+
+        Server.setConfig(new ServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
+
         try {
-            Server.setConfig(new ServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
-            setServerSocket(new ServerSocket(Integer.parseInt(getConfig().get("port"))));
-            setServerWebSocket(new ServerSocket(Integer.parseInt(getConfig().get("websocketPort"))));
-            setServerWeb(new ServerSocket(Integer.parseInt(getConfig().get("webPort"))));
-            //for performance reasons, it should be separate websocket serversocket on different port
-            //each of socket thread has own
+            setServerSocket(new ServerSocket(getSocketPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + config.get("port"));
+            System.err.println("failed listening on port: " + getSocketPort());
+            startFailed = true;
+        }
+
+        try {
+            setServerWebSocket(new ServerSocket(getWebsocketPort()));
+        } catch (IOException e) {
+            System.err.println("failed listening on port: " + getWebsocketPort());
+            startFailed = true;
+        }
+
+
+        try {
+            setServerWeb(new ServerSocket(getWebPort()));
+        } catch (IOException e) {
+            System.err.println("failed listening on port: " + getWebPort());
+            startFailed = true;
+        }
+
+        if(startFailed && exitOnFail) {
             System.exit(1);
         }
 
         addDefaultModules();
 
         this.start();
+    }
+
+    private static int getWebPort() {
+        return getConfigValueAsInt("webPort");
+    }
+
+    private static int getWebsocketPort() {
+        return getConfigValueAsInt("websocketPort");
+    }
+
+    private static int getSocketPort() {
+        return getConfigValueAsInt("socketPort");
+    }
+
+    private static String getConfigValue(String val) {
+        return getConfig().get(val);
+    }
+
+    private static int getConfigValueAsInt(String val) {
+        return Integer.parseInt(getConfigValue(val));
     }
 
     private void setServerWeb(ServerSocket serverWebPort) {

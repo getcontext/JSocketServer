@@ -48,7 +48,7 @@ public class ServerConfig {
             for (int s = 0; s < childNodes.getLength(); s++) {
                 Node item = childNodes.item(s);
                 if (item.getNodeType() == Node.ELEMENT_NODE) {
-                    setParameter((Element) item, "port");
+                    setParameter((Element) item, "socketPort");
                     setParameter((Element) item, "websocketPort");
                     setParameter((Element) item, "webPort");
                 }
