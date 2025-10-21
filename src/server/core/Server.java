@@ -9,9 +9,9 @@ import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import server.module.*;
-//import server.module.WebSocket;
 
 /**
  * @author andrzej.salamon@gmail.com
@@ -29,15 +29,14 @@ public final class Server extends Thread {
 
     private static ServerConfig config;
 
-//    private Socket client;
-//    private SocketConnection socketConnection;
-//    private WebSocketConnection webSocketConnection;
+    // thread-safe list wrapper
+    private final List<SocketConnection> connections = Collections.synchronizedList(new ArrayList<SocketConnection>());
 
-    private final List<SocketConnection> connections = new ArrayList<SocketConnection>();
-    private boolean running;
-    private boolean stop = false;
-    private boolean exitOnFail = true;
-    private boolean startFailed = false;
+    // flags used across threads
+    private volatile boolean running;
+    private volatile boolean stop = false;
+    private volatile boolean exitOnFail = true;
+    private volatile boolean startFailed = false;
 
     public Server() {
 
@@ -46,26 +45,25 @@ public final class Server extends Thread {
         try {
             setServerSocket(new ServerSocket(getSocketPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + getSocketPort());
+            System.err.println("failed listening on port: " + getSocketPort() + " -> " + e.getMessage());
             startFailed = true;
         }
 
         try {
             setServerWebSocket(new ServerSocket(getWebsocketPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + getWebsocketPort());
+            System.err.println("failed listening on port: " + getWebsocketPort() + " -> " + e.getMessage());
             startFailed = true;
         }
-
 
         try {
             setServerWeb(new ServerSocket(getWebPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + getWebPort());
+            System.err.println("failed listening on port: " + getWebPort() + " -> " + e.getMessage());
             startFailed = true;
         }
 
-        if(startFailed && exitOnFail) {
+        if (startFailed && exitOnFail) {
             System.exit(1);
         }
 
@@ -87,21 +85,28 @@ public final class Server extends Thread {
     }
 
     private static String getConfigValue(String val) {
-        return getConfig().get(val);
+        ServerConfig cfg = getConfig();
+        if (cfg == null) return "";
+        String v = cfg.get(val);
+        return v == null ? "" : v;
     }
 
     private static int getConfigValueAsInt(String val) {
-        return Integer.parseInt(getConfigValue(val));
+        String v = getConfigValue(val);
+        try {
+            return Integer.parseInt(v);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void setServerWeb(ServerSocket serverWebPort) {
         this.serverWeb = serverWebPort;
     }
 
-
     private void addDefaultModules() {
-
-        addModule(new WebSocketModule(getServerWebSocket())); //not sure if it is good to share
+        // add modules; connections list is thread-safe
+        addModule(new WebSocketModule(getServerWebSocket())); // sharing sockets intentionally
         addModule(new SocketModule(getServerSocket()));
         addModule(new WebModule(getServerWeb()));
     }
@@ -111,23 +116,38 @@ public final class Server extends Thread {
     }
 
     public void addModule(SocketConnection socketConnection) {
-        if (!connections.contains(socketConnection))
+        if (socketConnection == null) return;
+        if (!connections.contains(socketConnection)) {
             connections.add(socketConnection);
+        }
     }
 
     private void startModules() {
-        if (connections.isEmpty()) return;
-
-        for (SocketConnection conn : connections) {
-            conn.start();
+        synchronized (connections) {
+            if (connections.isEmpty()) return;
+            for (SocketConnection conn : connections) {
+                try {
+                    conn.start();
+                } catch (IllegalThreadStateException e) {
+                    // already started or cannot start; log and continue
+                    System.err.println("module start failed: " + e.getMessage());
+                } catch (Exception e) {
+                    System.err.println("unexpected module start error: " + e.getMessage());
+                }
+            }
         }
     }
 
     private void stopModules() {
-        if (connections.isEmpty()) return;
-
-        for (SocketConnection conn : connections) {
-            conn.stop();
+        synchronized (connections) {
+            if (connections.isEmpty()) return;
+            for (SocketConnection conn : connections) {
+                try {
+                    conn.stop();
+                } catch (Exception e) {
+                    System.err.println("module stop failed: " + e.getMessage());
+                }
+            }
         }
     }
 
@@ -144,28 +164,30 @@ public final class Server extends Thread {
         System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
         startModules();
 
-//        webSocketConnection = new WebSocket(serverSocket);
-//        socketConnection = new Socket(serverSocket);
-
         running = true;
         while (running) {
-            try {//@todo thread pooling
-                sleep(1000); //sleep server for a while
+            try {
+                Thread.sleep(1000); // sleep server for a while
             } catch (InterruptedException e) {
-                System.err.println("sleep failed");
+                // restore interrupted status and exit loop
+                Thread.currentThread().interrupt();
+                running = false;
             }
             if (stop) {
                 stopModules();
-                stopServer();
+                stopServer(); // closes sockets and stops thread
                 return;
             }
         }
+        // ensure cleanup in case loop exits
+        stopModules();
+        stopServer();
     }
 
     private static String getIp() {
         try {
             InetAddress addr = InetAddress.getLocalHost();
-            return addr.getAddress().toString();
+            return addr.getHostAddress();
         } catch (UnknownHostException e) {
             return "";
         }
@@ -187,14 +209,37 @@ public final class Server extends Thread {
         return this.serverWebSocket;
     }
 
+    /**
+     * Gracefully stop the server: stop the run loop and close sockets.
+     */
     public void stopServer() {
         running = false;
+        // close server sockets quietly
+        closeQuietly(serverSocket);
+        closeQuietly(serverWebSocket);
+        closeQuietly(serverWeb);
+    }
+
+    private void closeQuietly(ServerSocket s) {
+        if (s == null) return;
+        try {
+            s.close();
+        } catch (IOException e) {
+            // swallow - best effort close
+        }
+    }
+
+    public void requestStop() {
+        // external callers should use this to request orderly shutdown
+        stop = true;
     }
 
     public static void main(String[] args) {
-
         Server server = new Server();
+        // optionally handle start failure
+        if (server.startFailed && server.exitOnFail) {
+            System.exit(1);
+        }
     }
-
 
 }
