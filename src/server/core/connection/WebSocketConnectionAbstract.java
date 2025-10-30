@@ -45,9 +45,14 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
     }
 
     public boolean isHandshake() {
+        Matcher match = setSecWebSocketKey();
+        return match.find();
+    }
+
+    private Matcher setSecWebSocketKey() {
         Matcher match = Pattern.compile("Sec-WebSocket-Key: (.*)").matcher(request);
         secWebSocketKey = match.group(1);
-        return match.find();
+        return match;
     }
 
     public boolean isGet() {

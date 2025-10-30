@@ -10,6 +10,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Properties;
 
 import server.module.*;
 
@@ -22,6 +23,9 @@ public final class Server extends Thread {
     private static final String FILE_CONFIG_SERVER_YML = "server.yml";
 
     public static final String DIR_CONFIG = "config";
+
+    private Properties properties;
+
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
     private ServerSocket serverWeb = null;
