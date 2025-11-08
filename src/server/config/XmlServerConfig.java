@@ -22,10 +22,10 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 
-public class ServerConfig {
+public class XmlServerConfig {
     private final Map<String, String> parameters = new HashMap<String, String>();
 
-    public ServerConfig(String file) {
+    public XmlServerConfig(String file) {
         read(file);
     }
 

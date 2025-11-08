@@ -1,2 +1,8 @@
 /bin/
 /.idea/
+/target/
+.DS_Store
+/build/
+/out/
+/.vscode/
+/production/
