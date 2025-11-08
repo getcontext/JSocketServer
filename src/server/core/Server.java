@@ -1,7 +1,10 @@
 package server.core;
 
-import server.config.ServerConfig;
+import server.config.*;
 import server.utils.FileUtils;
+
+import java.util.logging.Logger;
+// import java.util.logging.Level; // unused
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -10,7 +13,6 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Properties;
 
 import server.module.*;
 
@@ -18,20 +20,25 @@ import server.module.*;
  * @author andrzej.salamon@gmail.com
  */
 public final class Server extends Thread {
+    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
+
+    private static final String ERR_PORT_PREFIX = "failed listening on port: ";
     private static final String FILE_CONFIG_SERVER_XML = "server.xml";
     private static final String FILE_CONFIG_SERVER_PROPS = "server.properties";
-    private static final String FILE_CONFIG_SERVER_YML = "server.yml";
+    // private static final String FILE_CONFIG_SERVER_YML = "server.yml"; // wont implement till now
 
-    public static final String DIR_CONFIG = "config";
+    private static final String DIR_CONFIG = "config";
 
-    private Properties properties;
+// removed unused commented code
+
+    private static ServerProperties serverProperties;
 
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
     private ServerSocket serverWeb = null;
     public static final String IP = getIp();
 
-    private static ServerConfig config;
+    private static XmlServerConfig config;
 
     // thread-safe list wrapper
     private final List<SocketConnection> connections = Collections.synchronizedList(new ArrayList<SocketConnection>());
@@ -44,26 +51,33 @@ public final class Server extends Thread {
 
     public Server() {
 
-        Server.setConfig(new ServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
+        // Server.setConfig(new XmlServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
+        try {
+            setServerProperties(FileUtils.loadServerProperties(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_PROPS));
+        } catch (IOException e) {
+            e.printStackTrace();
+            startFailed = true;
+            System.exit(1);
+        }
 
         try {
             setServerSocket(new ServerSocket(getSocketPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + getSocketPort() + " -> " + e.getMessage());
+            LOGGER.severe(ERR_PORT_PREFIX + getSocketPort() + " -> " + e.getMessage());
             startFailed = true;
         }
 
         try {
             setServerWebSocket(new ServerSocket(getWebsocketPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + getWebsocketPort() + " -> " + e.getMessage());
+            LOGGER.severe(ERR_PORT_PREFIX + getWebsocketPort() + " -> " + e.getMessage());
             startFailed = true;
         }
 
         try {
             setServerWeb(new ServerSocket(getWebPort()));
         } catch (IOException e) {
-            System.err.println("failed listening on port: " + getWebPort() + " -> " + e.getMessage());
+            LOGGER.severe(ERR_PORT_PREFIX + getWebPort() + " -> " + e.getMessage());
             startFailed = true;
         }
 
@@ -77,31 +91,15 @@ public final class Server extends Thread {
     }
 
     private static int getWebPort() {
-        return getConfigValueAsInt("webPort");
+        return ServerPropertiesValue.getConfigValueAsInt("webPort");
     }
 
     private static int getWebsocketPort() {
-        return getConfigValueAsInt("websocketPort");
+        return ServerPropertiesValue.getConfigValueAsInt("websocketPort");
     }
 
     private static int getSocketPort() {
-        return getConfigValueAsInt("socketPort");
-    }
-
-    private static String getConfigValue(String val) {
-        ServerConfig cfg = getConfig();
-        if (cfg == null) return "";
-        String v = cfg.get(val);
-        return v == null ? "" : v;
-    }
-
-    private static int getConfigValueAsInt(String val) {
-        String v = getConfigValue(val);
-        try {
-            return Integer.parseInt(v);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
+        return ServerPropertiesValue.getConfigValueAsInt("socketPort");
     }
 
     private void setServerWeb(ServerSocket serverWebPort) {
@@ -134,9 +132,9 @@ public final class Server extends Thread {
                     conn.start();
                 } catch (IllegalThreadStateException e) {
                     // already started or cannot start; log and continue
-                    System.err.println("module start failed: " + e.getMessage());
+                    LOGGER.severe("module start failed: " + e.getMessage());
                 } catch (Exception e) {
-                    System.err.println("unexpected module start error: " + e.getMessage());
+                    LOGGER.severe("unexpected module start error: " + e.getMessage());
                 }
             }
         }
@@ -149,23 +147,33 @@ public final class Server extends Thread {
                 try {
                     conn.stop();
                 } catch (Exception e) {
-                    System.err.println("module stop failed: " + e.getMessage());
+                    LOGGER.severe("module stop failed: " + e.getMessage());
                 }
             }
         }
     }
 
-    public static ServerConfig getConfig() {
+    public static XmlServerConfig getXmlConfig() {
         return config;
     }
 
-    public static void setConfig(ServerConfig config) {
+    public static void setXmlConfig(XmlServerConfig config) {
         Server.config = config;
     }
 
+    public static ServerProperties getServerProperties() {
+        return serverProperties;
+    }
+
+    public static void setServerProperties(ServerProperties config) {
+        Server.serverProperties = config;
+    }
+
     @Override
+    @SuppressWarnings("unused")
     public void run() {
-        System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
+        LOGGER.info("Andrew (Web)Socket(s) Server v. 1.1");
+        LOGGER.info("Started at IP: " + IP);
         startModules();
 
         running = true;
@@ -173,6 +181,7 @@ public final class Server extends Thread {
             try {
                 Thread.sleep(1000); // sleep server for a while
             } catch (InterruptedException e) {
+                LOGGER.warning("InterruptedException: " + e.getMessage());
                 // restore interrupted status and exit loop
                 Thread.currentThread().interrupt();
                 running = false;
@@ -188,11 +197,13 @@ public final class Server extends Thread {
         stopServer();
     }
 
+    @SuppressWarnings("unused")
     private static String getIp() {
         try {
             InetAddress addr = InetAddress.getLocalHost();
             return addr.getHostAddress();
         } catch (UnknownHostException e) {
+            LOGGER.warning("UnknownHostException: " + e.getMessage());
             return "";
         }
     }
@@ -224,11 +235,13 @@ public final class Server extends Thread {
         closeQuietly(serverWeb);
     }
 
+    @SuppressWarnings("unused")
     private void closeQuietly(ServerSocket s) {
         if (s == null) return;
         try {
             s.close();
         } catch (IOException e) {
+            LOGGER.warning("IOException closing socket: " + e.getMessage());
             // swallow - best effort close
         }
     }
