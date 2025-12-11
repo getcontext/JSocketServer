@@ -143,7 +143,7 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
         }
 
         outputStream.write(responseByte);
-        outputStream.flush();
+        flushOutputStream();
 
     }
 

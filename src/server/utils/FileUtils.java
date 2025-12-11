@@ -2,7 +2,6 @@ package server.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.NoSuchFileException;
 
 import server.config.ServerProperties;
 
@@ -49,7 +48,7 @@ public class FileUtils {
         InputStream stream = loader.getResourceAsStream(fileName);
         if (stream == null) {
             // If the resource is not found, mimic the previous behavior by throwing NoSuchFileException
-            throw new NoSuchFileException(fileName);
+            throw new IOException(fileName);
         }
         properties.load(stream);
         return properties;

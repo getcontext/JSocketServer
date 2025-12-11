@@ -9,8 +9,8 @@ import java.security.NoSuchAlgorithmException;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class WebSocketModule extends WebSocketConnectionAbstract { //double inheritance, not ellegant, ref,mv
-    public static final String MODULE_NAME = "websocket";
+public class WebSocketModule extends WebSocketConnectionAbstract { //double inheritance, not ellegant, ref,mv
+    public static final String MODULE_NAME = "websocketModule";
 
 
     public WebSocketModule(ServerSocket serverSocket) {
@@ -53,7 +53,7 @@ public final class WebSocketModule extends WebSocketConnectionAbstract { //doubl
                     e.printStackTrace();
                 }
                 try {
-                    outputStream.flush();
+                    flushOutputStream();
                 } catch (IOException e) {
                     System.err.println("cant flush");
                     e.printStackTrace();

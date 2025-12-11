@@ -7,7 +7,7 @@ import java.net.ServerSocket;
 
 public abstract class WebConnectionAbstract extends ConnectionAbstract implements SocketConnection {
 
-    public WebConnectionAbstract(ServerSocket serverSocket) {
+    protected WebConnectionAbstract(ServerSocket serverSocket) {
         super(serverSocket);
     }
 

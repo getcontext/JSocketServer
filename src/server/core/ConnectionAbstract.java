@@ -101,4 +101,8 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
 //            throw new RuntimeException(e);
         }
     }
+
+    protected void flushOutputStream() throws IOException {
+        outputStream.flush();
+    }
 }

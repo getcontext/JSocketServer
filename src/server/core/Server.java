@@ -13,6 +13,7 @@ import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Level;
 
 import server.module.*;
 
@@ -20,17 +21,22 @@ import server.module.*;
  * @author andrzej.salamon@gmail.com
  */
 public final class Server extends Thread {
+
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
 
     private static final String ERR_PORT_PREFIX = "failed listening on port: ";
-    private static final String FILE_CONFIG_SERVER_XML = "server.xml";
+    // private static final String FILE_CONFIG_SERVER_XML = "server.xml";
     private static final String FILE_CONFIG_SERVER_PROPS = "server.properties";
-    // private static final String FILE_CONFIG_SERVER_YML = "server.yml"; // wont implement till now
+    // private static final String FILE_CONFIG_SERVER_YML = "server.yml"; // wont
+    // implement till now
 
     private static final String DIR_CONFIG = "config";
+    private static final String CFG_ENABLED_PROTOCOLS = "enabledProtocols";
+    private static final String CFG_WEB_ENABLED = "webEnabled";
+    private static final String CFG_WEBSOCKET_ENABLED = "websocketEnabled";
+    private static final String CFG_SOCKET_ENABLED = "socketEnabled";
 
-// removed unused commented code
-
+    // removed unused commented code
     private static ServerProperties serverProperties;
 
     private ServerSocket serverSocket = null;
@@ -44,45 +50,60 @@ public final class Server extends Thread {
     private final List<SocketConnection> connections = Collections.synchronizedList(new ArrayList<SocketConnection>());
 
     // flags used across threads
-    private volatile boolean running;
+    private volatile boolean running = false;
     private volatile boolean stop = false;
     private volatile boolean exitOnFail = true;
     private volatile boolean startFailed = false;
 
     public Server() {
 
-        // Server.setConfig(new XmlServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_XML));
+        // Server.setConfig(new XmlServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR +
+        // FILE_CONFIG_SERVER_XML));
         try {
-            setServerProperties(FileUtils.loadServerProperties(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_PROPS));
+            setServerProperties(
+                    FileUtils.loadServerProperties(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_PROPS));
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.severe(e.getMessage());
             startFailed = true;
-            System.exit(1);
+            System.exit(-1);
         }
 
-        try {
-            setServerSocket(new ServerSocket(getSocketPort()));
-        } catch (IOException e) {
-            LOGGER.severe(ERR_PORT_PREFIX + getSocketPort() + " -> " + e.getMessage());
+        if (getSocketPort() < 1 || getWebsocketPort() < 1 || getWebPort() < 1) {
+            LOGGER.severe("Invalid port configuration. Ports must be greater than 0.");
             startFailed = true;
+            System.exit(-1);
         }
 
-        try {
-            setServerWebSocket(new ServerSocket(getWebsocketPort()));
-        } catch (IOException e) {
-            LOGGER.severe(ERR_PORT_PREFIX + getWebsocketPort() + " -> " + e.getMessage());
-            startFailed = true;
-        }
+        if (ServerPropertiesValue.getConfigValueAsBoolean(CFG_SOCKET_ENABLED)
+                || ServerPropertiesValue.getConfigValueAsString(CFG_ENABLED_PROTOCOLS).contains("socket"))
+            try {
+                setServerSocket(new ServerSocket(getSocketPort()));
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + "{0} -> {1}",
+                        new Object[] { getSocketPort(), e.getMessage() });
+                startFailed = true;
+            }
 
-        try {
-            setServerWeb(new ServerSocket(getWebPort()));
-        } catch (IOException e) {
-            LOGGER.severe(ERR_PORT_PREFIX + getWebPort() + " -> " + e.getMessage());
-            startFailed = true;
-        }
+        if (ServerPropertiesValue.getConfigValueAsBoolean(CFG_WEBSOCKET_ENABLED)
+                || ServerPropertiesValue.getConfigValueAsString(CFG_ENABLED_PROTOCOLS).contains("websocket"))
+            try {
+                setServerWebSocket(new ServerSocket(getWebsocketPort()));
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + "{0} -> {1}",
+                        new Object[] { getWebsocketPort(), e.getMessage() });
+                startFailed = true;
+            }
+
+        if (ServerPropertiesValue.getConfigValueAsBoolean(CFG_WEB_ENABLED))
+            try {
+                setServerWeb(new ServerSocket(getWebPort()));
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + "{0} -> {1}", new Object[] { getWebPort(), e.getMessage() });
+                startFailed = true;
+            }
 
         if (startFailed && exitOnFail) {
-            System.exit(1);
+            System.exit(-1);
         }
 
         addDefaultModules();
@@ -118,7 +139,9 @@ public final class Server extends Thread {
     }
 
     public void addModule(SocketConnection socketConnection) {
-        if (socketConnection == null) return;
+        if (socketConnection == null) {
+            return;
+        }
         if (!connections.contains(socketConnection)) {
             connections.add(socketConnection);
         }
@@ -126,15 +149,17 @@ public final class Server extends Thread {
 
     private void startModules() {
         synchronized (connections) {
-            if (connections.isEmpty()) return;
+            if (connections.isEmpty()) {
+                return;
+            }
             for (SocketConnection conn : connections) {
                 try {
                     conn.start();
                 } catch (IllegalThreadStateException e) {
                     // already started or cannot start; log and continue
-                    LOGGER.severe("module start failed: " + e.getMessage());
+                    LOGGER.log(Level.SEVERE, "module start failed: {0}", e.getMessage());
                 } catch (Exception e) {
-                    LOGGER.severe("unexpected module start error: " + e.getMessage());
+                    LOGGER.log(Level.SEVERE, "unexpected module start error: {0}", e.getMessage());
                 }
             }
         }
@@ -142,12 +167,14 @@ public final class Server extends Thread {
 
     private void stopModules() {
         synchronized (connections) {
-            if (connections.isEmpty()) return;
+            if (connections.isEmpty()) {
+                return;
+            }
             for (SocketConnection conn : connections) {
                 try {
                     conn.stop();
                 } catch (Exception e) {
-                    LOGGER.severe("module stop failed: " + e.getMessage());
+                    LOGGER.log(Level.SEVERE, "module stop failed: {0}", e.getMessage());
                 }
             }
         }
@@ -173,7 +200,7 @@ public final class Server extends Thread {
     @SuppressWarnings("unused")
     public void run() {
         LOGGER.info("Andrew (Web)Socket(s) Server v. 1.1");
-        LOGGER.info("Started at IP: " + IP);
+        LOGGER.log(Level.INFO, "Started at IP: {0}", IP);
         startModules();
 
         running = true;
@@ -181,7 +208,7 @@ public final class Server extends Thread {
             try {
                 Thread.sleep(1000); // sleep server for a while
             } catch (InterruptedException e) {
-                LOGGER.warning("InterruptedException: " + e.getMessage());
+                LOGGER.log(Level.WARNING, "InterruptedException: {0}", e.getMessage());
                 // restore interrupted status and exit loop
                 Thread.currentThread().interrupt();
                 running = false;
@@ -203,7 +230,7 @@ public final class Server extends Thread {
             InetAddress addr = InetAddress.getLocalHost();
             return addr.getHostAddress();
         } catch (UnknownHostException e) {
-            LOGGER.warning("UnknownHostException: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "UnknownHostException: {0}", e.getMessage());
             return "";
         }
     }
@@ -237,11 +264,13 @@ public final class Server extends Thread {
 
     @SuppressWarnings("unused")
     private void closeQuietly(ServerSocket s) {
-        if (s == null) return;
+        if (s == null) {
+            return;
+        }
         try {
             s.close();
         } catch (IOException e) {
-            LOGGER.warning("IOException closing socket: " + e.getMessage());
+            LOGGER.log(Level.WARNING, "IOException closing socket: {0}", e.getMessage());
             // swallow - best effort close
         }
     }
@@ -253,10 +282,6 @@ public final class Server extends Thread {
 
     public static void main(String[] args) {
         Server server = new Server();
-        // optionally handle start failure
-        if (server.startFailed && server.exitOnFail) {
-            System.exit(1);
-        }
     }
 
 }

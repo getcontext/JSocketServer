@@ -9,8 +9,8 @@ import server.core.connection.SocketConnectionAbstract;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class SocketModule extends SocketConnectionAbstract {
-    public final static String MODULE_NAME = "socket";
+public class SocketModule extends SocketConnectionAbstract {
+    public static final String MODULE_NAME = "socketModule";
 
     public SocketModule(ServerSocket serverSocket) {
         super(serverSocket);
@@ -27,35 +27,35 @@ public final class SocketModule extends SocketConnectionAbstract {
                 processStream();
                 receive();
                 broadcast();
-                outputStream.flush();
-//                out.close();
-//                in.close();
-//                getClient().close();
-//                try {
-////                out.close();
-////                in.close();
-//                    client.close();
-//                } catch (IOException e) {
-//                    // e.printStackTrace();
-//                }
+                flushOutputStream();
+                // out.close();
+                // in.close();
+                // getClient().close();
+                // try {
+                //// out.close();
+                //// in.close();
+                // client.close();
+                // } catch (IOException e) {
+                // // e.printStackTrace();
+                // }
             } catch (Exception e) {
             }
         }
     }
 
-//    @Override
-//    public void start() {
-//
-//    }
-//
-//    @Override
-//    public void stop() {
-//
-//    }
+    // @Override
+    // public void start() {
+    //
+    // }
+    //
+    // @Override
+    // public void stop() {
+    //
+    // }
 
     @Override
     public void receive() throws IOException {
-//            request = (SerializedSocketObject)in.readObject();
+        // request = (SerializedSocketObject)in.readObject();
     }
 
     @Override
@@ -64,7 +64,7 @@ public final class SocketModule extends SocketConnectionAbstract {
 
     @Override
     public void broadcast(String data) throws IOException {
-//            response = process(request);
-//            out.writeObject(response);
+        // response = process(request);
+        // out.writeObject(response);
     }
 }

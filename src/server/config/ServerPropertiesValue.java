@@ -2,7 +2,7 @@ package server.config;
 
 import server.core.Server;
 
-public class ServerPropertiesValue {
+public final class ServerPropertiesValue {
     private static String getConfigValue(String val) {
         ServerProperties cfg = Server.getServerProperties();
         if (cfg == null) return "";
@@ -19,5 +19,13 @@ public class ServerPropertiesValue {
 //            Server.LOGGER.warning("NumberFormatException: " + e.getMessage());
             return -1;
         }
+    }
+    public static String getConfigValueAsString(String val) {
+        return getConfigValue(val);
+    }
+
+    public static boolean getConfigValueAsBoolean(String val) {
+        String v = getConfigValue(val);
+        return v.equalsIgnoreCase("true") || v.equalsIgnoreCase("yes") || v.equals("1");
     }
 }

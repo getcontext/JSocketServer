@@ -1,6 +1,5 @@
 package server.module;
 
-import server.core.connection.SocketConnectionAbstract;
 import server.core.connection.WebConnectionAbstract;
 
 import java.io.IOException;
@@ -10,7 +9,7 @@ import java.net.ServerSocket;
 /**
  * @author andrzej.salamon@gmail.com
  */
-public final class WebModule extends WebConnectionAbstract {
+public class WebModule extends WebConnectionAbstract {
     public static final String MODULE_NAME = "webModuleSocket";
 
     private PrintWriter printWriter;
@@ -30,7 +29,7 @@ public final class WebModule extends WebConnectionAbstract {
                 processStream();
                 receive();
                 broadcast();
-                outputStream.flush();
+                flushOutputStream();
 //                out.close();
 //                in.close();
 //                getClient().close();
@@ -54,7 +53,16 @@ public final class WebModule extends WebConnectionAbstract {
 
     @Override
     public void broadcast() throws IOException {
+        printWriter = new PrintWriter(outputStream, true);
+        printWriter.println("HTTP/1.1 200 OK");
+        printWriter.println("Content-Type: text/html");
+        printWriter.println();
+        printWriter.println("<html><body><h1>Hello, World!</h1></body></html>");
+        flushPrintWriter();
+    }
 
+    private void flushPrintWriter() {
+        printWriter.flush();
     }
 
     @Override
