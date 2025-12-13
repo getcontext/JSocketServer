@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import java.net.ServerSocket;
 
+import server.core.Server;
 import server.core.connection.SocketConnectionAbstract;
 
 /**
@@ -11,6 +12,7 @@ import server.core.connection.SocketConnectionAbstract;
  */
 public class SocketModule extends SocketConnectionAbstract {
     public static final String MODULE_NAME = "socketModule";
+    public static final Server.MODULES MODULE_TYPE = Server.MODULES.SOCKET;
 
     public SocketModule(ServerSocket serverSocket) {
         super(serverSocket);

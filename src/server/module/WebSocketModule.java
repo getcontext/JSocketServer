@@ -1,5 +1,6 @@
 package server.module;
 
+import server.core.Server;
 import server.core.connection.WebSocketConnectionAbstract;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.security.NoSuchAlgorithmException;
  */
 public class WebSocketModule extends WebSocketConnectionAbstract { //double inheritance, not ellegant, ref,mv
     public static final String MODULE_NAME = "websocketModule";
+    public static final Server.MODULES MODULE_TYPE = Server.MODULES.WEBSOCKET;
 
 
     public WebSocketModule(ServerSocket serverSocket) {
@@ -59,13 +61,13 @@ public class WebSocketModule extends WebSocketConnectionAbstract { //double inhe
                     e.printStackTrace();
                 }
                 try {
-                    outputStream.close();
+                    closeOutputStream();
                 } catch (IOException e) {
                     System.err.println("cant close output stream");
                     e.printStackTrace();
                 }
                 try {
-                    inputStream.close();
+                    closeInputStream();
                 } catch (IOException e) {
                     System.err.println("cant inputSTream close");
                     e.printStackTrace();
@@ -83,6 +85,14 @@ public class WebSocketModule extends WebSocketConnectionAbstract { //double inhe
 //                e.printStackTrace();
 //            }
         }
+    }
+
+    private void closeInputStream() throws IOException {
+        inputStream.close();
+    }
+
+    private void closeOutputStream() throws IOException {
+        outputStream.close();
     }
 
 }

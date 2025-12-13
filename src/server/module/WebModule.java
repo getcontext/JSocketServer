@@ -1,5 +1,6 @@
 package server.module;
 
+import server.core.Server;
 import server.core.connection.WebConnectionAbstract;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.net.ServerSocket;
  */
 public class WebModule extends WebConnectionAbstract {
     public static final String MODULE_NAME = "webModuleSocket";
+    public static final Server.MODULES MODULE_TYPE = Server.MODULES.WEB;
 
     private PrintWriter printWriter;
 

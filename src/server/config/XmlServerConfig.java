@@ -21,7 +21,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-
+@Deprecated
 public class XmlServerConfig {
     private final Map<String, String> parameters = new HashMap<String, String>();
 

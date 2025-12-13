@@ -10,7 +10,7 @@ import static server.module.WebSocketModule.MODULE_NAME; //@todo alias? or probl
  * @todo add factory
  */
 public abstract class ConnectionAbstract implements Runnable, Connection {
-    protected static int counter = 0;
+    protected static int counter;
     protected final Thread thread;
 //    protected ObjectOutputStream out;
 //    protected ObjectInputStream in;
@@ -26,12 +26,20 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     protected boolean stop = false;
     protected java.net.Socket client;
     protected ServerSocket serverSocket;
+    protected int port;
 
     protected ConnectionAbstract(ServerSocket serverSocket) {
+        setCounter(0);
         this.serverSocket = serverSocket;
-        this.instanceNo = counter++;
+        this.port = serverSocket.getLocalPort();
+        this.instanceNo = getCounter();
+        incrementCounter();
         this.thread = new Thread(this, MODULE_NAME + instanceNo);
 
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public static int getCounter() {

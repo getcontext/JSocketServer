@@ -2,6 +2,7 @@ package server.config;
 
 import server.core.Server;
 
+@Deprecated
 public class ServerXmlConfigValue {
     private static String getConfigValue(String val) {
         XmlServerConfig cfg = Server.getXmlConfig();

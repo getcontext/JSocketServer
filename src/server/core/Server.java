@@ -31,12 +31,14 @@ public final class Server extends Thread {
     // implement till now
 
     private static final String DIR_CONFIG = "config";
-    private static final String CFG_ENABLED_PROTOCOLS = "enabledProtocols";
-    private static final String CFG_WEB_ENABLED = "webEnabled";
-    private static final String CFG_WEBSOCKET_ENABLED = "websocketEnabled";
-    private static final String CFG_SOCKET_ENABLED = "socketEnabled";
+    public static final String FORMAT_PARAM_LOGGER = "{0} -> {1}";
 
-    // removed unused commented code
+    public enum MODULES {
+        SOCKET,
+        WEBSOCKET,
+        WEB
+    }
+
     private static ServerProperties serverProperties;
 
     private ServerSocket serverSocket = null;
@@ -44,6 +46,7 @@ public final class Server extends Thread {
     private ServerSocket serverWeb = null;
     public static final String IP = getIp();
 
+    @Deprecated
     private static XmlServerConfig config;
 
     // thread-safe list wrapper
@@ -52,13 +55,20 @@ public final class Server extends Thread {
     // flags used across threads
     private volatile boolean running = false;
     private volatile boolean stop = false;
+
+    public boolean isExitOnFail() {
+        return exitOnFail;
+    }
+
+    public void setExitOnFail(boolean exitOnFail) {
+        this.exitOnFail = exitOnFail;
+    }
+
     private volatile boolean exitOnFail = true;
     private volatile boolean startFailed = false;
 
     public Server() {
-
-        // Server.setConfig(new XmlServerConfig(DIR_CONFIG + FileUtils.FILE_SEPARATOR +
-        // FILE_CONFIG_SERVER_XML));
+        //we are not using nio because we want to have it synchronous
         try {
             setServerProperties(
                     FileUtils.loadServerProperties(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_PROPS));
@@ -74,64 +84,85 @@ public final class Server extends Thread {
             System.exit(-1);
         }
 
-        if (ServerPropertiesValue.getConfigValueAsBoolean(CFG_SOCKET_ENABLED)
-                || ServerPropertiesValue.getConfigValueAsString(CFG_ENABLED_PROTOCOLS).contains("socket"))
-            try {
-                setServerSocket(new ServerSocket(getSocketPort()));
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + "{0} -> {1}",
-                        new Object[] { getSocketPort(), e.getMessage() });
-                startFailed = true;
-            }
-
-        if (ServerPropertiesValue.getConfigValueAsBoolean(CFG_WEBSOCKET_ENABLED)
-                || ServerPropertiesValue.getConfigValueAsString(CFG_ENABLED_PROTOCOLS).contains("websocket"))
-            try {
-                setServerWebSocket(new ServerSocket(getWebsocketPort()));
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + "{0} -> {1}",
-                        new Object[] { getWebsocketPort(), e.getMessage() });
-                startFailed = true;
-            }
-
-        if (ServerPropertiesValue.getConfigValueAsBoolean(CFG_WEB_ENABLED))
-            try {
-                setServerWeb(new ServerSocket(getWebPort()));
-            } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + "{0} -> {1}", new Object[] { getWebPort(), e.getMessage() });
-                startFailed = true;
-            }
+        configureModule(ConfigConstant.SOCKET_ENABLED, getSocketPort(), MODULES.SOCKET);
+        configureModule(ConfigConstant.WEBSOCKET_ENABLED, getWebsocketPort(), MODULES.WEBSOCKET);
+        configureModule(ConfigConstant.WEB_ENABLED, getWebPort(), MODULES.WEB);
 
         if (startFailed && exitOnFail) {
             System.exit(-1);
         }
 
-        addDefaultModules();
-
         this.start();
     }
 
+    private void configureModule(String socketEnabled, int socketPort, MODULES module) {
+        if (isEnabled(socketEnabled))
+            try {
+                setupModule(module, socketPort);
+            } catch (IOException e) {
+                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + FORMAT_PARAM_LOGGER,
+                        new Object[]{socketPort, e.getMessage()});
+                startFailed = true;
+            }
+    }
+
+    private static boolean isEnabled(String socketEnabled) {
+        return ServerPropertiesValue.getConfigValueAsBoolean(socketEnabled);
+    }
+
+    private void setupModule(MODULES module, int socketPort) throws IOException {
+        switch (module) {
+            case SOCKET:
+                setServerSocket(createSocket(socketPort));
+                addSocketModule();
+                break;
+            case WEBSOCKET:
+                setServerWebSocket(createSocket(socketPort));
+                addWebsocketModule();
+                break;
+            case WEB:
+                setServerWeb(createSocket(socketPort));
+                addWebModule();
+                break;
+            default:
+                LOGGER.severe("Unknown module type");
+                break;
+        }
+    }
+
+    private void addModule() {
+    }
+
+    private static ServerSocket createSocket(int port) throws IOException {
+        return new ServerSocket(port);
+    }
+
     private static int getWebPort() {
-        return ServerPropertiesValue.getConfigValueAsInt("webPort");
+        return ServerPropertiesValue.getConfigValueAsInt(ConfigConstant.WEB_PORT);
     }
 
     private static int getWebsocketPort() {
-        return ServerPropertiesValue.getConfigValueAsInt("websocketPort");
+        return ServerPropertiesValue.getConfigValueAsInt(ConfigConstant.WEBSOCKET_PORT);
     }
 
     private static int getSocketPort() {
-        return ServerPropertiesValue.getConfigValueAsInt("socketPort");
+        return ServerPropertiesValue.getConfigValueAsInt(ConfigConstant.SOCKET_PORT);
     }
 
     private void setServerWeb(ServerSocket serverWebPort) {
         this.serverWeb = serverWebPort;
     }
 
-    private void addDefaultModules() {
-        // add modules; connections list is thread-safe
-        addModule(new WebSocketModule(getServerWebSocket())); // sharing sockets intentionally
-        addModule(new SocketModule(getServerSocket()));
+    private void addWebModule() {
         addModule(new WebModule(getServerWeb()));
+    }
+
+    private void addSocketModule() {
+        addModule(new SocketModule(getServerSocket()));
+    }
+
+    private void addWebsocketModule() {
+        addModule(new WebSocketModule(getServerWebSocket()));
     }
 
     private ServerSocket getServerWeb() {
@@ -154,6 +185,7 @@ public final class Server extends Thread {
             }
             for (SocketConnection conn : connections) {
                 try {
+                    LOGGER.log(Level.INFO, "Starting module: {0} at port {1}", new Object[] { conn.getClass().getSimpleName(), conn.getPort() } );
                     conn.start();
                 } catch (IllegalThreadStateException e) {
                     // already started or cannot start; log and continue
@@ -224,7 +256,6 @@ public final class Server extends Thread {
         stopServer();
     }
 
-    @SuppressWarnings("unused")
     private static String getIp() {
         try {
             InetAddress addr = InetAddress.getLocalHost();
@@ -262,7 +293,6 @@ public final class Server extends Thread {
         closeQuietly(serverWeb);
     }
 
-    @SuppressWarnings("unused")
     private void closeQuietly(ServerSocket s) {
         if (s == null) {
             return;

@@ -11,4 +11,5 @@ public interface Connection {
     void receive() throws IOException;
     void broadcast() throws IOException;
     void broadcast(String data) throws IOException;
+    int getPort();
 }

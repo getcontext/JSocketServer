@@ -2,6 +2,7 @@ package server.core.connection;
 
 //import server.core;
 import server.core.ConnectionAbstract;
+import server.core.HttpMethod;
 import server.core.WebSocketConnection;
 
 import javax.xml.bind.DatatypeConverter;
@@ -16,7 +17,9 @@ import java.util.regex.Pattern;
 
 
 public abstract class WebSocketConnectionAbstract extends ConnectionAbstract implements WebSocketConnection {
-    protected String secWebSocketKey;
+    protected static final String UUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    protected String secWebSocketKey; //@todo cache it with timeout
+    private byte[] responseBuffer;
 
     public WebSocketConnectionAbstract(ServerSocket serverSocket) {
         super(serverSocket);
@@ -37,7 +40,7 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
                 .printBase64Binary(
                         MessageDigest
                                 .getInstance("SHA-1")
-                                .digest((secWebSocketKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+                                .digest((secWebSocketKey + UUID)
                                         .getBytes(StandardCharsets.UTF_8)))
                 + "\r\n\r\n")
                 .getBytes(StandardCharsets.UTF_8);
@@ -56,23 +59,23 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
     }
 
     public boolean isGet() {
-        Matcher get = Pattern.compile("^GET").matcher(request);
+        Matcher get = Pattern.compile("^"+ HttpMethod.GET).matcher(request);
         return get.find();
     }
 
     public void receive() throws IOException {
-        byte[] buffer = new byte[server.core.WebSocketConnection.MAX_BUFFER];
+        responseBuffer = new byte[WebSocketConnection.MAX_BUFFER];
         int messageLength, mask, dataStart;
 
-        messageLength = inputStream.read(buffer);
+        messageLength = inputStream.read(responseBuffer);
         if (messageLength == -1) {
             return;
         }
 
-        requestByte = new byte[messageLength];
+        responseByte = new byte[messageLength];
 
         //b[0] is always text in my case so no need to check;
-        byte data = buffer[1]; //does it cause a problem ?
+        byte data = responseBuffer[1]; //does it cause a problem ?
         byte op = (byte) 127;
         byte length;
 
@@ -86,17 +89,17 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
 
         int j = 0, i=mask;
         for (; i < (mask + 4); i++) { //start at mask, stop at last + 4
-            masks[j] = buffer[i]; //problem here
+            masks[j] = responseBuffer[i]; //problem here
             j++;
         }
 
         dataStart = mask + 4;
 
         for (i = dataStart, j = 0; i < messageLength; i++, j++) {
-            requestByte[j] = (byte) (buffer[i] ^ masks[j % 4]);
+            responseByte[j] = (byte) (responseBuffer[i] ^ masks[j % 4]);
         }
 
-        response = new String(requestByte); //why now string copy of byte ?
+        response = new String(responseByte); //why now string copy of byte ?
     }
 
     public void broadcast(String data) throws IOException {
@@ -132,17 +135,17 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
         int responseLength = frameCount + rawData.length;
         int responseLimit = 0;
 
-        responseByte = new byte[responseLength];
+        requestByte = new byte[responseLength];
 
         for (; responseLimit < frameCount; responseLimit++) {
-            responseByte[responseLimit] = frame[responseLimit];
+            requestByte[responseLimit] = frame[responseLimit];
         }
 
         for (byte dataByte : rawData) {
-            responseByte[responseLimit++] = dataByte;
+            requestByte[responseLimit++] = dataByte;
         }
 
-        outputStream.write(responseByte);
+        outputStream.write(requestByte);
         flushOutputStream();
 
     }
