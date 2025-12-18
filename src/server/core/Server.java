@@ -1,11 +1,8 @@
 package server.core;
 
 import server.config.*;
+import server.module.*;
 import server.utils.FileUtils;
-
-import java.util.logging.Logger;
-// import java.util.logging.Level; // unused
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -14,15 +11,14 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
-
-import server.module.*;
+import java.util.logging.Logger;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
 public final class Server extends Thread {
 
-    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
+//    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
     private static final String ERR_PORT_PREFIX = "failed listening on port: ";
     private static final String FILE_CONFIG_SERVER_PROPS = "server.properties";
     private static final String DIR_CONFIG = "config";
@@ -41,7 +37,7 @@ public final class Server extends Thread {
     private ServerSocket serverWeb = null;
 
     // thread-safe list wrapper
-    private final List<SocketConnection> connections = Collections.synchronizedList(new ArrayList<SocketConnection>());
+    private final List<SocketConnection> connections = new ArrayList<SocketConnection>();
 
     // flags used across threads
     private volatile boolean running = false;
@@ -64,13 +60,16 @@ public final class Server extends Thread {
             setServerProperties(
                     FileUtils.loadServerProperties(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_PROPS));
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "No configuration found: {0}", e.getMessage());
+            e.printStackTrace();
+//            LOGGER.log(Level.SEVERE, "No configuration found: {0}", e.getMessage());
+            System.err.println("No configuration found");
             startFailed = true;
             System.exit(-1);
         }
 
         if (getSocketPort() < 1 || getWebsocketPort() < 1 || getWebPort() < 1) {
-            LOGGER.severe("Invalid port configuration. Ports must be greater than 0.");
+//            LOGGER.severe("Invalid port configuration. Ports must be greater than 0.");
+            System.err.println("Invalid port number");
             startFailed = true;
             System.exit(-1);
         }
@@ -91,8 +90,9 @@ public final class Server extends Thread {
             try {
                 setupModule(module, socketPort);
             } catch (IOException e) {
-                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + FORMAT_PARAM_LOGGER,
-                        new Object[] { socketPort, e.getMessage() });
+//                LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + FORMAT_PARAM_LOGGER,
+//                        new Object[] { socketPort, e.getMessage() });
+                System.err.println("Failed to configure module: " + e.getMessage());
                 startFailed = true;
             }
     }
@@ -116,7 +116,8 @@ public final class Server extends Thread {
                 addWebModule();
                 break;
             default:
-                LOGGER.severe("Unknown module type");
+                System.err.println("Unknown module: " + module);
+//                LOGGER.severe("Unknown module type");
                 break;
         }
     }
@@ -176,14 +177,17 @@ public final class Server extends Thread {
             }
             for (SocketConnection conn : connections) {
                 try {
-                    LOGGER.log(Level.INFO, "Starting module: {0} at port {1}",
-                            new Object[] { conn.getClass().getSimpleName(), conn.getPort() });
+//                    LOGGER.log(Level.INFO, "Starting module: {0} at port {1}",
+//                            new Object[] { conn.getClass().getSimpleName(), conn.getPort() });
+                    System.out.println("Starting module: " + conn.getClass().getSimpleName() + " at port " + conn.getPort());
                     conn.start();
                 } catch (IllegalThreadStateException e) {
                     // already started or cannot start; log and continue
-                    LOGGER.log(Level.SEVERE, "module start failed: {0}", e.getMessage());
+//                    LOGGER.log(Level.SEVERE, "module start failed: {0}", e.getMessage());
+                    System.err.println("module start failed: " + e.getMessage());
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "unexpected module start error: {0}", e.getMessage());
+//                    LOGGER.log(Level.SEVERE, "unexpected module start error: {0}", e.getMessage());
+                    System.err.println("unexpected module start error: " + e.getMessage());
                 }
             }
         }
@@ -198,7 +202,8 @@ public final class Server extends Thread {
                 try {
                     conn.stop();
                 } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "module stop failed: {0}", e.getMessage());
+//                    LOGGER.log(Level.SEVERE, "module stop failed: {0}", e.getMessage());
+                    System.err.println("unexpected module stop error: " + e.getMessage());
                 }
             }
         }
@@ -215,8 +220,10 @@ public final class Server extends Thread {
     @Override
     @SuppressWarnings("unused")
     public void run() {
-        LOGGER.info("Andrew (Web)Socket(s) Server v. 1.1");
-        LOGGER.log(Level.INFO, "Started at IP: {0}", IP);
+//        LOGGER.info("Andrew (Web)Socket(s) Server v. 1.1");
+        System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
+//        LOGGER.log(Level.INFO, "Started at IP: {0}", IP);
+        System.out.println("Started at IP: " + IP);
         startModules();
 
         running = true;
@@ -224,7 +231,8 @@ public final class Server extends Thread {
             try {
                 Thread.sleep(1000); // sleep server for a while
             } catch (InterruptedException e) {
-                LOGGER.log(Level.WARNING, "InterruptedException: {0}", e.getMessage());
+//                LOGGER.log(Level.WARNING, "InterruptedException: {0}", e.getMessage());
+                System.err.println("Server sleep interrupted: " + e.getMessage());
                 // restore interrupted status and exit loop
                 Thread.currentThread().interrupt();
                 running = false;
@@ -245,7 +253,8 @@ public final class Server extends Thread {
             InetAddress addr = InetAddress.getLocalHost();
             return addr.getHostAddress();
         } catch (UnknownHostException e) {
-            LOGGER.log(Level.WARNING, "UnknownHostException: {0}", e.getMessage());
+//            LOGGER.log(Level.WARNING, "UnknownHostException: {0}", e.getMessage());
+            System.err.println("Unable to get IP address UnknownHostException: " + e.getMessage());
             return "";
         }
     }
@@ -284,7 +293,8 @@ public final class Server extends Thread {
         try {
             s.close();
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "IOException closing socket: {0}", e.getMessage());
+//            LOGGER.log(Level.WARNING, "IOException closing socket: {0}", e.getMessage());
+            System.err.println("Unable to close server socket: " + e.getMessage());
             // swallow - best effort close
         }
     }

@@ -36,13 +36,6 @@ public class WebModule extends WebConnectionAbstract {
                 flushOutputStream();
                 closeOutpInputStreams();
                 getClient().close();
-//                try {
-////                out.close();
-////                in.close();
-//                    client.close();
-//                } catch (IOException e) {
-//                    // e.printStackTrace();
-//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

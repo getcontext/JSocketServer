@@ -21,10 +21,10 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     protected byte[] frame = new byte[10];
     protected String response;
     protected String request;
-    protected boolean close = false;
+    protected volatile boolean close = false;
     protected int instanceNo;
-    protected boolean stop = false;
-    protected java.net.Socket client;
+    protected volatile boolean stop = false;
+    protected Socket client;
     protected ServerSocket serverSocket;
     protected int port;
 
