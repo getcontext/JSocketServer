@@ -85,7 +85,7 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
         instanceNo = -1;
     }
 
-    public void processStream(Socket client) {
+    public void processStreamBinary(Socket client) {
         try {
             setClient(client);
             outputStream = new ObjectOutputStream(getClient().getOutputStream());
@@ -110,7 +110,40 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
         }
     }
 
+    public void processStream(Socket client) {
+        try {
+            setClient(client);
+            outputStream = getClient().getOutputStream();
+            inputStream = getClient().getInputStream();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } /*finally {
+            try { //try to close gracefully
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }*/
+    }
+
+    public void processStreamBinary() {
+        try {
+            processStreamBinary(serverSocket.accept());
+        } catch (IOException e) {
+            e.printStackTrace();
+//            throw new RuntimeException(e);
+        }
+    }
+
     protected void flushOutputStream() throws IOException {
         outputStream.flush();
+    }
+
+    protected void closeInputStream() throws IOException {
+        inputStream.close();
+    }
+
+    protected void closeOutputStream() throws IOException {
+        outputStream.close();
     }
 }

@@ -26,7 +26,7 @@ public class WebSocketModule extends WebSocketConnectionAbstract { //double inhe
 
     public void run() {
         while (!stop) {
-            processStream();
+            processStreamBinary();
 
             request = getRequestAsString();
 
@@ -85,14 +85,6 @@ public class WebSocketModule extends WebSocketConnectionAbstract { //double inhe
 //                e.printStackTrace();
 //            }
         }
-    }
-
-    private void closeInputStream() throws IOException {
-        inputStream.close();
-    }
-
-    private void closeOutputStream() throws IOException {
-        outputStream.close();
     }
 
 }

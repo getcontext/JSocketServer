@@ -9,5 +9,6 @@ import java.net.Socket;
 public interface SocketConnection extends Connection {
 	String getId();
     void processStream();
+    void processStreamBinary();
     void processStream(Socket client);
 }

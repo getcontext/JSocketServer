@@ -23,31 +23,22 @@ import server.module.*;
 public final class Server extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
-
     private static final String ERR_PORT_PREFIX = "failed listening on port: ";
-    // private static final String FILE_CONFIG_SERVER_XML = "server.xml";
     private static final String FILE_CONFIG_SERVER_PROPS = "server.properties";
-    // private static final String FILE_CONFIG_SERVER_YML = "server.yml"; // wont
-    // implement till now
-
     private static final String DIR_CONFIG = "config";
-    public static final String FORMAT_PARAM_LOGGER = "{0} -> {1}";
+    private static final String FORMAT_PARAM_LOGGER = "{0} -> {1}";
+    public static final String IP = getIp();
 
     public enum MODULES {
         SOCKET,
         WEBSOCKET,
         WEB
+
     }
-
     private static ServerProperties serverProperties;
-
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
     private ServerSocket serverWeb = null;
-    public static final String IP = getIp();
-
-    @Deprecated
-    private static XmlServerConfig config;
 
     // thread-safe list wrapper
     private final List<SocketConnection> connections = Collections.synchronizedList(new ArrayList<SocketConnection>());
@@ -68,12 +59,12 @@ public final class Server extends Thread {
     private volatile boolean startFailed = false;
 
     public Server() {
-        //we are not using nio because we want to have it synchronous
+        // we are not using nio because we want to have it synchronous
         try {
             setServerProperties(
                     FileUtils.loadServerProperties(DIR_CONFIG + FileUtils.FILE_SEPARATOR + FILE_CONFIG_SERVER_PROPS));
         } catch (IOException e) {
-            LOGGER.severe(e.getMessage());
+            LOGGER.log(Level.SEVERE, "No configuration found: {0}", e.getMessage());
             startFailed = true;
             System.exit(-1);
         }
@@ -101,7 +92,7 @@ public final class Server extends Thread {
                 setupModule(module, socketPort);
             } catch (IOException e) {
                 LOGGER.log(Level.SEVERE, ERR_PORT_PREFIX + FORMAT_PARAM_LOGGER,
-                        new Object[]{socketPort, e.getMessage()});
+                        new Object[] { socketPort, e.getMessage() });
                 startFailed = true;
             }
     }
@@ -185,7 +176,8 @@ public final class Server extends Thread {
             }
             for (SocketConnection conn : connections) {
                 try {
-                    LOGGER.log(Level.INFO, "Starting module: {0} at port {1}", new Object[] { conn.getClass().getSimpleName(), conn.getPort() } );
+                    LOGGER.log(Level.INFO, "Starting module: {0} at port {1}",
+                            new Object[] { conn.getClass().getSimpleName(), conn.getPort() });
                     conn.start();
                 } catch (IllegalThreadStateException e) {
                     // already started or cannot start; log and continue
@@ -210,14 +202,6 @@ public final class Server extends Thread {
                 }
             }
         }
-    }
-
-    public static XmlServerConfig getXmlConfig() {
-        return config;
-    }
-
-    public static void setXmlConfig(XmlServerConfig config) {
-        Server.config = config;
     }
 
     public static ServerProperties getServerProperties() {
