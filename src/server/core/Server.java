@@ -9,16 +9,12 @@ import java.net.ServerSocket;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author andrzej.salamon@gmail.com
  */
 public final class Server extends Thread {
 
-//    private static final Logger LOGGER = Logger.getLogger(Server.class.getName());
     private static final String ERR_PORT_PREFIX = "failed listening on port: ";
     private static final String FILE_CONFIG_SERVER_PROPS = "server.properties";
     private static final String DIR_CONFIG = "config";
@@ -117,7 +113,6 @@ public final class Server extends Thread {
                 break;
             default:
                 System.err.println("Unknown module: " + module);
-//                LOGGER.severe("Unknown module type");
                 break;
         }
     }
@@ -177,8 +172,6 @@ public final class Server extends Thread {
             }
             for (SocketConnection conn : connections) {
                 try {
-//                    LOGGER.log(Level.INFO, "Starting module: {0} at port {1}",
-//                            new Object[] { conn.getClass().getSimpleName(), conn.getPort() });
                     System.out.println("Starting module: " + conn.getClass().getSimpleName() + " at port " + conn.getPort());
                     conn.start();
                 } catch (IllegalThreadStateException e) {
@@ -220,9 +213,7 @@ public final class Server extends Thread {
     @Override
     @SuppressWarnings("unused")
     public void run() {
-//        LOGGER.info("Andrew (Web)Socket(s) Server v. 1.1");
         System.out.println("Andrew (Web)Socket(s) Server v. 1.1");
-//        LOGGER.log(Level.INFO, "Started at IP: {0}", IP);
         System.out.println("Started at IP: " + IP);
         startModules();
 
@@ -231,7 +222,6 @@ public final class Server extends Thread {
             try {
                 Thread.sleep(1000); // sleep server for a while
             } catch (InterruptedException e) {
-//                LOGGER.log(Level.WARNING, "InterruptedException: {0}", e.getMessage());
                 System.err.println("Server sleep interrupted: " + e.getMessage());
                 // restore interrupted status and exit loop
                 Thread.currentThread().interrupt();
@@ -253,7 +243,6 @@ public final class Server extends Thread {
             InetAddress addr = InetAddress.getLocalHost();
             return addr.getHostAddress();
         } catch (UnknownHostException e) {
-//            LOGGER.log(Level.WARNING, "UnknownHostException: {0}", e.getMessage());
             System.err.println("Unable to get IP address UnknownHostException: " + e.getMessage());
             return "";
         }
@@ -293,7 +282,6 @@ public final class Server extends Thread {
         try {
             s.close();
         } catch (IOException e) {
-//            LOGGER.log(Level.WARNING, "IOException closing socket: {0}", e.getMessage());
             System.err.println("Unable to close server socket: " + e.getMessage());
             // swallow - best effort close
         }
