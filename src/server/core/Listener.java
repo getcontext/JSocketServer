@@ -1,8 +1,18 @@
 package server.core;
 
-public interface Listener<T> {
-    void onReceive(T message);
-    void onBroadcast(T message);
-    T onBroadcast();
-    T onReceive();
+public interface Listener {
+    public enum WHEN {
+        BEFORE,
+        AFTER
+    }
+    WHEN defaultWhen = WHEN.AFTER;
+
+    void onBeforeReceive(Object message);
+    void onBeforeBroadcast(Object message);
+    Object onBeforeBroadcast();
+    Object onBeforeReceive();
+    void onAfterReceive(Object message);
+    void onAfterBroadcast(Object message);
+    Object onAfterBroadcast();
+    Object onAfterReceive();
 }

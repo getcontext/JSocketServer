@@ -3,6 +3,7 @@ package server.core;
 import server.config.*;
 import server.module.*;
 import server.utils.FileUtils;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -25,8 +26,8 @@ public final class Server extends Thread {
         SOCKET,
         WEBSOCKET,
         WEB
-
     }
+
     private static ServerProperties serverProperties;
     private ServerSocket serverSocket = null;
     private ServerSocket serverWebSocket = null;
@@ -36,19 +37,10 @@ public final class Server extends Thread {
     private final List<SocketConnection> connections = new ArrayList<SocketConnection>();
 
     // flags used across threads
-    private volatile boolean running = false;
-    private volatile boolean stop = false;
-
-    public boolean isExitOnFail() {
-        return exitOnFail;
-    }
-
-    public void setExitOnFail(boolean exitOnFail) {
-        this.exitOnFail = exitOnFail;
-    }
-
-    private volatile boolean exitOnFail = true;
-    private volatile boolean startFailed = false;
+    private static boolean running = false;
+    private static boolean stop = false;
+    private static boolean exitOnFail = true;
+    private static boolean startFailed = false;
 
     public Server() {
         // we are not using nio because we want to have it synchronous
@@ -79,6 +71,14 @@ public final class Server extends Thread {
         }
 
         this.start();
+    }
+
+    public boolean isExitOnFail() {
+        return exitOnFail;
+    }
+
+    public void setExitOnFail(boolean exitOnFail) {
+        Server.exitOnFail = exitOnFail;
     }
 
     private void configureModule(String socketEnabled, int socketPort, MODULES module) {
@@ -160,8 +160,10 @@ public final class Server extends Thread {
         if (socketConnection == null) {
             return;
         }
-        if (!connections.contains(socketConnection)) {
-            connections.add(socketConnection);
+        synchronized (connections) {
+            if (!connections.contains(socketConnection)) {
+                connections.add(socketConnection);
+            }
         }
     }
 
@@ -233,9 +235,9 @@ public final class Server extends Thread {
                 return;
             }
         }
-        // ensure cleanup in case loop exits
-        stopModules();
-        stopServer();
+//        // ensure cleanup in case loop exits
+//        stopModules();
+//        stopServer();
     }
 
     private static String getIp() {
@@ -270,15 +272,13 @@ public final class Server extends Thread {
     public void stopServer() {
         running = false;
         // close server sockets quietly
-        closeQuietly(serverSocket);
-        closeQuietly(serverWebSocket);
-        closeQuietly(serverWeb);
+        closeServerSocket(serverSocket);
+        closeServerSocket(serverWebSocket);
+        closeServerSocket(serverWeb);
     }
 
-    private void closeQuietly(ServerSocket s) {
-        if (s == null) {
-            return;
-        }
+    private void closeServerSocket(ServerSocket s) {
+        if (s == null) return;
         try {
             s.close();
         } catch (IOException e) {

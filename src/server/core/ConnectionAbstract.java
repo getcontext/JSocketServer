@@ -12,7 +12,7 @@ import static server.module.WebSocketModule.MODULE_NAME; //@todo alias? or probl
 public abstract class ConnectionAbstract implements Runnable, Connection {
     protected static int counter;
     protected final Thread thread;
-//    protected ObjectOutputStream out;
+    //    protected ObjectOutputStream out;
 //    protected ObjectInputStream in;
     protected OutputStream outputStream;
     protected InputStream inputStream;
@@ -21,9 +21,9 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     protected byte[] frame = new byte[10];
     protected String response;
     protected String request;
-    protected volatile boolean close = false;
+    protected boolean close = false;
     protected int instanceNo;
-    protected volatile boolean stop = false;
+    protected boolean stop = false;
     protected Socket client;
     protected ServerSocket serverSocket;
     protected int port;
@@ -32,6 +32,14 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
         setCounter(0);
         this.serverSocket = serverSocket;
         this.port = serverSocket.getLocalPort();
+        this.instanceNo = getCounter();
+        incrementCounter();
+        this.thread = new Thread(this, MODULE_NAME + instanceNo);
+
+    }
+
+    //for child classes
+    protected ConnectionAbstract() {
         this.instanceNo = getCounter();
         incrementCounter();
         this.thread = new Thread(this, MODULE_NAME + instanceNo);
@@ -77,12 +85,13 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     }
 
     @Override
-    public void stop() {
+    public void stop() throws IOException {
 //        getThread().stop();
         getThread().interrupt();
         stop = true;
         decrementCounter();
         instanceNo = -1;
+        client.close();
     }
 
     public void processStreamBinary(Socket client) {
@@ -117,13 +126,7 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
             inputStream = getClient().getInputStream();
         } catch (IOException e) {
             e.printStackTrace();
-        } /*finally {
-            try { //try to close gracefully
-                client.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }*/
+        }
     }
 
     public void processStreamBinary() {

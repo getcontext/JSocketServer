@@ -7,7 +7,7 @@ import java.io.IOException;
  */
 public interface Connection {
     void start();
-    void stop();
+    void stop() throws IOException;
     void receive() throws IOException;
     void broadcast() throws IOException;
     void broadcast(String data) throws IOException;

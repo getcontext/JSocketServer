@@ -10,3 +10,5 @@ Java socket server. Currently Connection plugin done for handling WebSocket conn
 WebSocket server is able to receive, read and send handshake also read/send data from/to client.
 
 some code snippets refactored from stackoverflow and mozilla.org
+
+this stuff should work on Java 1.2 and higher

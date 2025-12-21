@@ -11,4 +11,7 @@ public abstract class WebConnectionAbstract extends ConnectionAbstract implement
         super(serverSocket);
     }
 
+    public WebConnectionAbstract() {
+        super();
+    }
 }

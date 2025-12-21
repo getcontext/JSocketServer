@@ -59,8 +59,7 @@ public abstract class WebSocketConnectionAbstract extends ConnectionAbstract imp
     }
 
     public boolean isGet() {
-        Matcher get = Pattern.compile("^"+ HttpMethod.GET).matcher(request);
-        return get.find();
+        return HttpMethod.isGet(request);
     }
 
     public void receive() throws IOException {
