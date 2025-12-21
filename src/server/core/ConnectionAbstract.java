@@ -149,4 +149,20 @@ public abstract class ConnectionAbstract implements Runnable, Connection {
     protected void closeOutputStream() throws IOException {
         outputStream.close();
     }
+
+    public String getResponseAsString() {
+        return response;
+    }
+
+    public void setResponse(String response) {
+        this.response = response;
+    }
+
+    public String getRequestAsString() {
+        return request;
+    }
+
+    public void setRequest(String request) {
+        this.request = request;
+    }
 }
